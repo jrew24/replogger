@@ -1,1 +1,1643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lax Practice Tracker 🥍</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,800&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --grass:   #1a7a3a;
+    --grass-lt:#22a04d;
+    --grass-dk:#0f4d24;
+    --field:   #e8f5ee;
+    --white:   #ffffff;
+    --chalk:   #f0f7f2;
+    --gold:    #f5b800;
+    --gold-dk: #d49a00;
+    --red:     #d63030;
+    --sky:     #2196c4;
+    --text:    #0d1f13;
+    --text-md: #3a5244;
+    --text-lt: #7a9e8a;
+    --border:  #cde3d4;
+    --shadow:  0 4px 24px rgba(10,50,20,0.10);
+    --shadow-lg: 0 12px 48px rgba(10,50,20,0.16);
+    --r: 16px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { transition: background-color .6s ease, color .6s ease; }
+  body, .hero, .card, .auth-card, .tabs, .tab, .stat-card, .btn-green { transition: background .6s ease, background-color .6s ease, border-color .6s ease, color .4s ease, box-shadow .6s ease; }
+  body { font-family:'Barlow',sans-serif; background:var(--chalk); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+  .field-bg { position:fixed; inset:0; z-index:0; pointer-events:none; background:repeating-linear-gradient(180deg,rgba(26,122,58,0.045) 0px,rgba(26,122,58,0.045) 60px,rgba(26,122,58,0.02) 60px,rgba(26,122,58,0.02) 120px); }
+
+  /* ── Hero ── */
+  .hero { position:relative; z-index:1; background:linear-gradient(135deg,var(--grass-dk) 0%,var(--grass) 60%,var(--grass-lt) 100%); padding:40px 24px 52px; text-align:center; overflow:hidden; }
+  .hero::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(90deg,rgba(255,255,255,0.04) 0px,rgba(255,255,255,0.04) 1px,transparent 1px,transparent 80px); }
+  .hero::after { content:''; position:absolute; bottom:-2px; left:0; right:0; height:32px; background:var(--chalk); clip-path:ellipse(55% 100% at 50% 100%); }
+  .hero-inner { position:relative; z-index:1; }
+  .lax-icon { font-size:4.5rem; display:block; animation:spinBounce 3s ease-in-out infinite; filter:drop-shadow(0 4px 12px rgba(0,0,0,0.3)); }
+  @keyframes spinBounce { 0%{transform:translateY(0) rotate(-8deg)} 25%{transform:translateY(-12px) rotate(8deg)} 50%{transform:translateY(0) rotate(-4deg)} 75%{transform:translateY(-6px) rotate(4deg)} 100%{transform:translateY(0) rotate(-8deg)} }
+  .hero h1 { font-family:'Barlow Condensed',sans-serif; font-size:clamp(2.4rem,7vw,4.5rem); font-weight:900; color:#fff; text-transform:uppercase; letter-spacing:2px; line-height:1; margin-top:10px; text-shadow:0 3px 16px rgba(0,0,0,0.3); }
+  .hero h1 em { font-style:italic; color:var(--gold); display:block; font-size:0.85em; letter-spacing:4px; }
+  .hero p { color:rgba(255,255,255,0.75); font-size:.95rem; font-weight:600; margin-top:8px; letter-spacing:.5px; }
+  .field-lines { display:flex; justify-content:center; gap:40px; margin-top:18px; opacity:0.5; }
+  .field-line { width:60px; height:3px; background:#fff; border-radius:2px; }
+
+  /* ── Auth bar in hero ── */
+  .hero-auth { position:relative; z-index:1; margin-top:16px; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
+  .hero-user { color:rgba(255,255,255,0.85); font-size:.85rem; font-weight:700; letter-spacing:.03em; }
+  .btn-hero { padding:7px 18px; border-radius:50px; border:2px solid rgba(255,255,255,0.4); background:rgba(255,255,255,0.12); color:#fff; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:.88rem; text-transform:uppercase; letter-spacing:.06em; cursor:pointer; transition:all .2s; }
+  .btn-hero:hover { background:rgba(255,255,255,0.22); border-color:rgba(255,255,255,0.7); }
+
+  /* ── Page ── */
+  .page { position:relative; z-index:1; max-width:960px; margin:0 auto; padding:28px 20px 80px; }
+
+  /* ── Auth Screen ── */
+  #auth-screen { display:flex; align-items:center; justify-content:center; min-height:60vh; }
+  .auth-card { background:var(--white); border-radius:24px; padding:40px 36px; max-width:420px; width:100%; box-shadow:var(--shadow-lg); border-top:5px solid var(--grass); animation:riseUp .5s cubic-bezier(.34,1.56,.64,1); }
+  .auth-card h2 { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--grass-dk); margin-bottom:4px; }
+  .auth-card .auth-sub { font-size:.85rem; color:var(--text-lt); font-weight:600; margin-bottom:24px; }
+  .auth-fields { display:flex; flex-direction:column; gap:12px; margin-bottom:16px; }
+  .auth-field label { display:block; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.09em; color:var(--text-lt); margin-bottom:5px; }
+  .auth-field input { width:100%; padding:11px 14px; border:2px solid var(--border); border-radius:10px; font-family:'Barlow',sans-serif; font-size:.95rem; font-weight:600; color:var(--text); background:var(--chalk); outline:none; transition:border-color .2s, box-shadow .2s; }
+  .auth-field input:focus { border-color:var(--grass); box-shadow:0 0 0 3px rgba(26,122,58,.12); background:#fff; }
+  .auth-err { font-size:.82rem; color:var(--red); font-weight:700; min-height:18px; margin-bottom:10px; }
+  .auth-toggle { text-align:center; font-size:.85rem; color:var(--text-lt); font-weight:600; margin-top:14px; }
+  .auth-toggle a { color:var(--grass); font-weight:800; cursor:pointer; text-decoration:underline; }
+  .auth-divider { height:1px; background:var(--border); margin:20px 0; }
+
+  /* ── Stats ── */
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:28px; }
+  @media(max-width:500px){ .stats{grid-template-columns:1fr;} }
+  .stat-card { background:var(--white); border-radius:var(--r); padding:18px 14px; text-align:center; box-shadow:var(--shadow); border-top:4px solid var(--grass); animation:riseUp .5s cubic-bezier(.34,1.56,.64,1) both; }
+  .stat-card:nth-child(2){ border-top-color:var(--gold); }
+  .stat-card:nth-child(3){ border-top-color:var(--sky); }
+  .stat-n { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:2.6rem; line-height:1; color:var(--grass); }
+  .stat-card:nth-child(2) .stat-n { color:var(--gold-dk); }
+  .stat-card:nth-child(3) .stat-n { color:var(--sky); }
+  .stat-l { font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--text-lt); margin-top:4px; }
+  @keyframes riseUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── Sync ── */
+  .sync-bar { display:flex; align-items:center; gap:8px; font-size:.8rem; font-weight:700; color:var(--text-lt); margin-bottom:20px; }
+  .dot { width:8px;height:8px;border-radius:50%;background:var(--text-lt);flex-shrink:0; }
+  .dot.ok{background:#22c55e} .dot.busy{background:var(--gold);animation:pulse 1s infinite} .dot.bad{background:var(--red)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+
+  /* ── Main Tabs ── */
+  .tabs { display:flex; gap:0; margin-bottom:26px; border-radius:var(--r); overflow:hidden; background:var(--white); box-shadow:var(--shadow); border:2px solid var(--border); }
+  .tab { flex:1; padding:12px 8px; border:none; background:transparent; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:.95rem; text-transform:uppercase; letter-spacing:.07em; cursor:pointer; color:var(--text-lt); transition:all .2s; border-right:2px solid var(--border); }
+  .tab:last-child { border-right:none; }
+  .tab.on { background:var(--grass); color:#fff; }
+  .panel { display:none; }
+  .panel.on { display:block; }
+
+  /* ── Leaderboard sub-tabs ── */
+  .lb-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
+  .lb-tab { padding:8px 14px; border-radius:50px; border:2px solid var(--border); background:var(--chalk); font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:.85rem; text-transform:uppercase; letter-spacing:.06em; cursor:pointer; color:var(--text-lt); transition:all .2s; display:flex; align-items:center; gap:5px; }
+  .lb-tab:hover { border-color:var(--grass); color:var(--grass); }
+  .lb-tab.on { color:#fff; border-color:transparent; }
+  .lb-tab.total.on      { background:linear-gradient(135deg,var(--gold-dk),#f97316); }
+  .lb-tab.shooting.on   { background:linear-gradient(135deg,#d63030,#f56565); }
+  .lb-tab.wallballs.on  { background:linear-gradient(135deg,#2196c4,#38bdf8); }
+  .lb-tab.groundballs.on{ background:linear-gradient(135deg,#1a7a3a,#22a04d); }
+  .lb-tab.footwork.on      { background:linear-gradient(135deg,#7c3aed,#a78bfa); }
+  .lb-tab.goaliedrills.on  { background:linear-gradient(135deg,#0f4d24,#1a7a3a); }
+  .lb-tab.faceoffdrills.on { background:linear-gradient(135deg,#b45309,#d97706); }
+  .lb-panel { display:none; }
+  .lb-panel.on { display:block; }
+
+  /* ── Cards ── */
+  .card { background:var(--white); border-radius:var(--r); padding:24px 26px; box-shadow:var(--shadow); margin-bottom:22px; animation:riseUp .45s cubic-bezier(.34,1.56,.64,1) both; border:1.5px solid var(--border); }
+  .card-title { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.25rem; text-transform:uppercase; letter-spacing:.08em; color:var(--grass-dk); margin-bottom:16px; display:flex; align-items:center; gap:10px; border-bottom:2px dashed var(--border); padding-bottom:10px; }
+
+  /* ── Buttons ── */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 22px; border:none; border-radius:10px; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:1.05rem; text-transform:uppercase; letter-spacing:.06em; cursor:pointer; transition:transform .15s, box-shadow .15s, opacity .15s; white-space:nowrap; }
+  .btn:active { transform:scale(.96)!important; }
+  .btn:disabled { opacity:.4; cursor:not-allowed; }
+  .btn-green { background:linear-gradient(135deg,var(--grass),var(--grass-lt)); color:#fff; box-shadow:0 4px 14px rgba(26,122,58,.35); }
+  .btn-green:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 7px 20px rgba(26,122,58,.42); }
+  .btn-red { background:linear-gradient(135deg,var(--red),#e53e3e); color:#fff; box-shadow:0 4px 14px rgba(214,48,48,.35); }
+  .btn-ghost { background:#f1f5f9; color:var(--text-md); border:none; }
+  .btn-ghost:hover { background:#e2e8f0; }
+  .btn-full { width:100%; }
+  .btn-sm { background:#fff1f2; color:var(--red); border:1.5px solid #fecaca; border-radius:8px; padding:5px 12px; cursor:pointer; font-family:'Barlow',sans-serif; font-weight:700; font-size:.82rem; transition:background .15s; }
+  .btn-sm:hover { background:#fee2e2; }
+
+  /* ── Form fields ── */
+  .fields { display:grid; gap:13px; }
+  .f2 { grid-template-columns:1fr 1fr; }
+  .f3 { grid-template-columns:1fr 1fr 1fr; }
+  @media(max-width:620px){ .f2,.f3{grid-template-columns:1fr;} }
+  .f label { display:block; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.09em; color:var(--text-lt); margin-bottom:5px; }
+  .f input, .f select { width:100%; padding:11px 14px; border:2px solid var(--border); border-radius:10px; font-family:'Barlow',sans-serif; font-size:.95rem; font-weight:600; color:var(--text); background:var(--chalk); outline:none; transition:border-color .2s, box-shadow .2s; appearance:none; -webkit-appearance:none; }
+  .f select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a9e8a' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; cursor:pointer; }
+  .f input:focus, .f select:focus { border-color:var(--grass); box-shadow:0 0 0 3px rgba(26,122,58,.12); background:#fff; }
+
+  /* ── Drill toggles ── */
+  .drill-label { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.09em; color:var(--text-lt); margin-bottom:8px; display:block; }
+  .drill-grid { display:flex; flex-wrap:wrap; gap:8px; }
+  .drill-toggle { display:none; }
+  .drill-toggle + label { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:50px; border:2px solid var(--border); background:var(--chalk); font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:.92rem; text-transform:uppercase; letter-spacing:.05em; cursor:pointer; color:var(--text-lt); transition:all .2s; user-select:none; }
+  .drill-toggle + label:hover { border-color:var(--grass); color:var(--grass); }
+  .drill-toggle:checked + label { background:var(--grass); border-color:var(--grass); color:#fff; box-shadow:0 3px 10px rgba(26,122,58,.3); }
+
+  /* ── Player chips ── */
+  .chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .chip { padding:7px 16px; border-radius:50px; border:2px solid var(--border); background:var(--chalk); font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:.92rem; text-transform:uppercase; letter-spacing:.05em; cursor:pointer; transition:all .2s; color:var(--text-lt); }
+  .chip:hover { border-color:var(--grass); color:var(--grass); }
+  .chip.on { border-color:transparent; color:#fff; }
+  .chip.c0.on{background:linear-gradient(135deg,#1a7a3a,#22a04d);box-shadow:0 3px 12px rgba(26,122,58,.3)}
+  .chip.c1.on{background:linear-gradient(135deg,#d63030,#f56565);box-shadow:0 3px 12px rgba(214,48,48,.3)}
+  .chip.c2.on{background:linear-gradient(135deg,#2196c4,#38bdf8);box-shadow:0 3px 12px rgba(33,150,196,.3)}
+  .chip.c3.on{background:linear-gradient(135deg,#f5b800,#f97316);box-shadow:0 3px 12px rgba(245,184,0,.3)}
+  .chip.c4.on{background:linear-gradient(135deg,#7c3aed,#a78bfa);box-shadow:0 3px 12px rgba(124,58,237,.3)}
+  .chip.c5.on{background:linear-gradient(135deg,#0f4d24,#1a7a3a);box-shadow:0 3px 12px rgba(15,77,36,.3)}
+
+  /* ── Drill tags ── */
+  .drill-tags { display:flex; flex-wrap:wrap; gap:4px; }
+  .drill-tag { display:inline-block; padding:2px 8px; border-radius:50px; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; background:var(--field); color:var(--grass-dk); border:1px solid var(--border); white-space:nowrap; }
+
+  /* ── Table ── */
+  .tbl { width:100%; border-collapse:collapse; margin-top:14px; }
+  .tbl th { font-family:'Barlow Condensed',sans-serif; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--text-lt); padding:8px 12px; text-align:left; border-bottom:2px solid var(--border); background:var(--chalk); }
+  .tbl td { padding:10px 12px; border-bottom:1px solid var(--border); font-weight:600; font-size:.88rem; vertical-align:middle; }
+  .tbl tr:last-child td { border-bottom:none; }
+  .tbl tr:hover td { background:var(--field); }
+  .badge { display:inline-block; padding:2px 10px; border-radius:50px; font-weight:800; font-size:.78rem; background:#dcfce7; color:var(--grass-dk); font-family:'Barlow Condensed',sans-serif; letter-spacing:.04em; white-space:nowrap; }
+
+  /* ── Leaderboard rows ── */
+  .lb { display:flex; flex-direction:column; gap:9px; }
+  .lb-row { display:flex; align-items:center; gap:13px; padding:13px 16px; border-radius:13px; background:var(--chalk); border:1.5px solid var(--border); transition:transform .2s, box-shadow .2s; position:relative; overflow:hidden; animation:riseUp .35s ease both; }
+  .lb-row::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--grass); }
+  .lb-row.r1::before{background:linear-gradient(180deg,var(--gold),#f97316)} .lb-row.r2::before{background:linear-gradient(180deg,#94a3b8,#64748b)} .lb-row.r3::before{background:linear-gradient(180deg,#cd7c2e,#a55c1e)}
+  .lb-row:hover { transform:translateX(4px); box-shadow:var(--shadow); }
+  .lb-row.r1{background:linear-gradient(135deg,#fffbeb,#fef9e7);border-color:#fde68a}
+  .lb-row.r2{background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-color:#e2e8f0}
+  .lb-row.r3{background:linear-gradient(135deg,#fff7ed,#fef3e8);border-color:#fed7aa}
+  .lb-rank { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.5rem; min-width:38px; text-align:center; line-height:1; }
+  .lb-rank.r1c{color:var(--gold-dk)} .lb-rank.r2c{color:#64748b} .lb-rank.r3c{color:#cd7c2e}
+  .lax-av { width:42px; height:42px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1rem; color:#fff; }
+  .la0{background:linear-gradient(135deg,#1a7a3a,#22a04d)} .la1{background:linear-gradient(135deg,#d63030,#f56565)} .la2{background:linear-gradient(135deg,#2196c4,#38bdf8)} .la3{background:linear-gradient(135deg,#f5b800,#f97316)} .la4{background:linear-gradient(135deg,#7c3aed,#a78bfa)} .la5{background:linear-gradient(135deg,#0f4d24,#1a7a3a)}
+  .lb-info { flex:1; min-width:0; }
+  .lb-name { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:1rem; text-transform:uppercase; letter-spacing:.04em; }
+  .lb-sub { font-size:.7rem; color:var(--text-lt); font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+  .bar-bg { height:6px; background:var(--border); border-radius:6px; overflow:hidden; margin-top:5px; }
+  .bar-fill { height:100%; border-radius:6px; transition:width .9s cubic-bezier(.34,1.56,.64,1); }
+  .lb-stat { text-align:right; }
+  .lb-stat-n { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.2rem; }
+  .lb-stat-l { display:block; font-family:'Barlow',sans-serif; font-size:.65rem; font-weight:700; color:var(--text-lt); letter-spacing:.04em; text-transform:uppercase; }
+
+  /* ── Drill board header ── */
+  .drill-board-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; padding-bottom:10px; border-bottom:2px dashed var(--border); }
+  .drill-board-icon { font-size:1.7rem; }
+  .drill-board-title { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.15rem; text-transform:uppercase; letter-spacing:.08em; color:var(--grass-dk); }
+  .drill-board-sub { font-size:.72rem; color:var(--text-lt); font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+
+  /* ── Position badge ── */
+  .pos-badge { display:inline-block; padding:2px 9px; border-radius:50px; font-size:.65rem; font-weight:800; text-transform:uppercase; letter-spacing:.07em; }
+  .pos-Goalie{background:#fef3c7;color:#92400e} .pos-Attack{background:#fee2e2;color:#991b1b} .pos-Midfielder{background:#dbeafe;color:#1e40af} .pos-Defender{background:#dcfce7;color:#166534}
+
+  /* ── Manage ── */
+  .mgr-list { display:flex; flex-direction:column; gap:9px; margin-top:10px; }
+  .mgr-row { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:var(--chalk); border-radius:10px; border:1.5px solid var(--border); }
+  .mgr-info { display:flex; align-items:center; gap:10px; font-weight:700; }
+  .mgr-sub { font-size:.75rem; color:var(--text-lt); font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+
+  /* ── Empty ── */
+  .empty { text-align:center; padding:36px 20px; color:var(--text-lt); font-size:.9rem; font-weight:700; }
+  .empty .ei { font-size:2.8rem; display:block; margin-bottom:10px; }
+  .lb-empty { text-align:center; padding:24px; color:var(--text-lt); font-size:.85rem; font-weight:700; }
+
+  /* ── Admin password modal ── */
+  .modal-overlay { position:fixed; inset:0; z-index:500; background:rgba(10,30,15,0.65); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.hidden { display:none; }
+  .modal { background:var(--white); border-radius:24px; padding:36px 32px; max-width:400px; width:100%; box-shadow:var(--shadow-lg); animation:popIn .35s cubic-bezier(.34,1.56,.64,1); border-top:5px solid var(--grass); text-align:center; }
+  @keyframes popIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+  .modal-icon { font-size:2.8rem; display:block; margin-bottom:8px; }
+  .modal h3 { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.5rem; text-transform:uppercase; letter-spacing:.06em; color:var(--grass-dk); margin-bottom:6px; }
+  .modal p { font-size:.85rem; color:var(--text-lt); font-weight:600; margin-bottom:18px; }
+  .modal-input-wrap { position:relative; margin-bottom:14px; }
+  .modal-input-wrap input { width:100%; padding:12px 44px 12px 16px; border:2.5px solid var(--border); border-radius:12px; font-family:'Barlow',sans-serif; font-size:1.05rem; font-weight:700; color:var(--text); background:var(--chalk); outline:none; text-align:center; letter-spacing:.15em; transition:border-color .2s; }
+  .modal-input-wrap input:focus { border-color:var(--grass); box-shadow:0 0 0 3px rgba(26,122,58,.15); background:#fff; }
+  .modal-input-wrap input.shake { animation:shake .35s ease; border-color:var(--red)!important; }
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  .eye-btn { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:var(--text-lt); padding:4px; }
+  .modal-error { font-size:.8rem; color:var(--red); font-weight:800; text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; min-height:18px; }
+  .modal-btns { display:flex; gap:10px; }
+  .modal-btns .btn { flex:1; }
+
+  /* ── Toast ── */
+  #toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(90px); background:var(--grass-dk); color:#fff; padding:10px 22px; border-radius:50px; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:.9rem; text-transform:uppercase; letter-spacing:.06em; box-shadow:var(--shadow-lg); z-index:200; transition:transform .35s cubic-bezier(.34,1.56,.64,1); white-space:nowrap; }
+  #toast.show { transform:translateX(-50%) translateY(0); }
+  #toast.bad { background:var(--red); }
+
+  /* ── Session timeout warning ── */
+  #session-warning { position:fixed; top:0; left:0; right:0; z-index:300; background:linear-gradient(135deg,#92400e,#b45309); color:#fff; padding:12px 20px; display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:.95rem; text-transform:uppercase; letter-spacing:.06em; box-shadow:0 4px 20px rgba(0,0,0,.25); animation:slideDown .4s cubic-bezier(.34,1.56,.64,1); }
+  #session-warning.hidden { display:none; }
+  @keyframes slideDown { from{transform:translateY(-100%)} to{transform:translateY(0)} }
+  #session-warning .sw-btn { padding:6px 16px; border-radius:50px; border:2px solid rgba(255,255,255,.6); background:rgba(255,255,255,.15); color:#fff; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:.85rem; text-transform:uppercase; letter-spacing:.05em; cursor:pointer; transition:background .2s; }
+  #session-warning .sw-btn:hover { background:rgba(255,255,255,.3); }
+
+  /* ── Spinner ── */
+  .spinner-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px; gap:14px; }
+  .spinner { width:44px;height:44px;border:4px solid var(--border);border-top-color:var(--grass);border-radius:50%;animation:spin .7s linear infinite; }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spinner-wrap p { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:.95rem; text-transform:uppercase; letter-spacing:.1em; color:var(--text-lt); }
+
+  .danger-card { border-color:#fecaca!important; }
+
+  /* ── Grade filter ── */
+  .grade-filter { display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+  .grade-filter-label { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:.8rem; text-transform:uppercase; letter-spacing:.1em; color:var(--text-lt); white-space:nowrap; }
+  .grade-select { padding:8px 36px 8px 14px; border-radius:50px; border:2px solid var(--border); background:var(--chalk); font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:.88rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text); outline:none; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a9e8a' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; transition:border-color .2s; }
+  .grade-select:hover, .grade-select:focus { border-color:var(--grass); outline:none; }
+  .grade-badge { display:inline-block; padding:2px 9px; border-radius:50px; font-size:.65rem; font-weight:800; text-transform:uppercase; letter-spacing:.07em; }
+  .grade-HS { background:#e0e7ff; color:#1e3a8a; }
+  .grade-78 { background:#fef3c7; color:#92400e; }
+  .grade-56 { background:#dbeafe; color:#1e40af; }
+  .grade-34 { background:#dcfce7; color:#166534; }
+  .grade-12 { background:#f3e8ff; color:#6b21a8; }
+  .divider { height:1px; background:var(--border); margin:16px 0; }
+  .section-label { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:.7rem; text-transform:uppercase; letter-spacing:.12em; color:var(--text-lt); margin-bottom:9px; }
+  .my-label { display:inline-block; padding:2px 8px; border-radius:4px; background:#dcfce7; color:var(--grass-dk); font-size:.65rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; margin-left:6px; }
+</style>
+</head>
+<body>
+
+<div class="field-bg"></div>
+
+<!-- Admin password modal -->
+<div class="modal-overlay hidden" id="pw-modal">
+  <div class="modal">
+    <span class="modal-icon">🔒</span>
+    <h3>Admin Required</h3>
+    <p>Enter the admin password to perform this action.</p>
+    <div class="modal-input-wrap">
+      <input type="password" id="pw-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')confirmPassword()">
+      <button class="eye-btn" onclick="toggleEye()" id="eye-btn">👁</button>
+    </div>
+    <div class="modal-error" id="pw-error"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="cancelPassword()">Cancel</button>
+      <button class="btn btn-green" onclick="confirmPassword()">Confirm ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-inner">
+    <span class="lax-icon" id="hero-sport-icon">🥍</span>
+    <h1 id="hero-sport-title">Lax<em>Practice Tracker</em></h1>
+    <p id="hero-sport-sub">Log your reps · Own the field · Top the board</p>
+    <div class="field-lines"><div class="field-line"></div><div class="field-line"></div><div class="field-line"></div></div>
+    <div class="hero-auth" id="hero-auth" style="display:none">
+      <span class="hero-user" id="hero-email"></span>
+      <button class="btn-hero" onclick="signOut()">Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Loading -->
+  <div id="init-loading" class="spinner-wrap"><div class="spinner"></div><p>Loading…</p></div>
+
+  <!-- Auth screen -->
+  <div id="auth-screen" style="display:none">
+    <div class="auth-card">
+      <!-- Sign In view -->
+      <div id="view-signin">
+        <h2>Welcome Back</h2>
+        <p class="auth-sub">Sign in to manage your players</p>
+        <div class="auth-fields">
+          <div class="auth-field"><label>Email</label><input type="email" id="si-email" placeholder="parent@email.com" onkeydown="if(event.key==='Enter')doSignIn()"></div>
+          <div class="auth-field"><label>Password</label><input type="password" id="si-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doSignIn()"></div>
+        </div>
+        <div class="auth-err" id="si-err"></div>
+        <button class="btn btn-green btn-full" onclick="doSignIn()">Sign In →</button>
+        <div class="auth-toggle">Don't have an account? <a onclick="switchView('signup')">Sign up</a></div>
+      </div>
+      <!-- Sign Up view -->
+      <div id="view-signup" style="display:none">
+        <h2>Create Account</h2>
+        <p class="auth-sub">Sign up to start tracking your players</p>
+        <div class="auth-fields">
+          <div class="auth-field"><label>Your Name</label><input type="text" id="su-name" placeholder="e.g. Coach Smith" onkeydown="if(event.key==='Enter')doSignUp()"></div>
+          <div class="auth-field"><label>Email</label><input type="email" id="su-email" placeholder="parent@email.com" onkeydown="if(event.key==='Enter')doSignUp()"></div>
+          <div class="auth-field"><label>School Code</label><input type="text" id="su-code" placeholder="Ask your coach for the school code" style="text-transform:uppercase" onkeydown="if(event.key==='Enter')doSignUp()"></div>
+          <div class="auth-field"><label>Password</label><input type="password" id="su-pass" placeholder="Min. 6 characters" onkeydown="if(event.key==='Enter')doSignUp()"></div>
+        </div>
+        <div class="auth-err" id="su-err"></div>
+        <button class="btn btn-green btn-full" onclick="doSignUp()">Create Account →</button>
+        <div class="auth-toggle">Already have an account? <a onclick="switchView('signin')">Sign in</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main app -->
+  <div id="app-body" style="display:none">
+
+    <div class="stats">
+      <div class="stat-card"><div class="stat-n" id="s-kids">0</div><div class="stat-l">🥍 My Players</div></div>
+      <div class="stat-card"><div class="stat-n" id="s-sess">0</div><div class="stat-l" id="s-sess-label">📋 My Sessions</div></div>
+      <div class="stat-card"><div class="stat-n" id="s-mins">0</div><div class="stat-l" id="s-mins-label">⏱ My Minutes</div></div>
+    </div>
+
+    <div class="sync-bar">
+      <div class="dot" id="sync-dot"></div>
+      <span id="sync-lbl">Connecting…</span>
+    </div>
+
+    <div class="tabs">
+      <button class="tab on" onclick="goTab('log',this)">📝 Log Practice</button>
+      <button class="tab" onclick="goTab('board',this)">🏆 Leaderboard</button>
+      <button class="tab" onclick="goTab('manage',this)">⚙️ Manage</button>
+    </div>
+
+    <!-- LOG TAB -->
+    <div class="panel on" id="tab-log">
+      <!-- Add player -->
+      <div class="card" style="animation-delay:.05s">
+        <div class="card-title"><span id="add-player-sport-icon">🥍</span> Add a Player</div>
+        <div class="fields f3">
+          <div class="f"><label>Player Name</label><input type="text" id="add-name" placeholder="e.g. Jake" maxlength="30"></div>
+          <div class="f">
+            <label>Position</label>
+            <select id="add-position"><option value="" disabled selected>Select position…</option></select>
+          </div>
+          <div class="f">
+            <label>Grade</label>
+            <select id="add-grade">
+              <option value="" disabled selected>Select grade…</option>
+              <option value="HS">High School</option>
+              <option value="7/8">7th / 8th Grade</option>
+              <option value="5/6">5th / 6th Grade</option>
+              <option value="3/4">3rd / 4th Grade</option>
+              <option value="1/2">1st / 2nd Grade</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:13px;display:flex;justify-content:flex-end">
+          <button class="btn btn-green" onclick="addChild()">Add Player ＋</button>
+        </div>
+      </div>
+
+      <!-- Log minutes -->
+      <div class="card" style="animation-delay:.1s">
+        <div class="card-title"><span>⏱️</span> Log Practice Minutes</div>
+        <div id="no-kids" class="empty"><span class="ei" id="no-kids-icon">🥍</span>Add a player above to get started!</div>
+        <div id="log-section" style="display:none">
+          <p class="section-label">Select Your Player</p>
+          <div class="chips" id="chips"></div>
+          <!-- Sport selector (shown when player plays multiple sports) -->
+          <div id="sport-selector-wrap" style="display:none;margin-bottom:12px">
+            <p class="section-label">Sport</p>
+            <select id="log-sport-select" class="grade-select" onchange="onLogSportChange()" style="border-radius:10px;padding:10px 36px 10px 14px">
+            </select>
+          </div>
+          <div class="divider"></div>
+          <div class="fields f2" style="margin-bottom:14px">
+            <div class="f"><label>Minutes Practiced</label><input type="number" id="log-mins" placeholder="e.g. 45" min="1" max="999"></div>
+            <div class="f"><label>Date</label><input type="date" id="log-date"></div>
+          </div>
+          <span class="drill-label">Drills Practiced <span style="font-weight:600;text-transform:none;letter-spacing:0">(select all that apply)</span></span>
+          <div class="drill-grid" id="drill-grid"></div>
+          <div style="margin-top:16px;display:flex;justify-content:flex-end">
+            <button class="btn btn-green" onclick="logSession()">Log Session ✓</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Session history -->
+      <div class="card" id="hist-card" style="animation-delay:.15s;display:none">
+        <div class="card-title"><span>📋</span> Sessions — <span id="hist-name" style="color:var(--grass)"></span></div>
+        <div id="hist-body"></div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD TAB -->
+    <div class="panel" id="tab-board">
+      <!-- Filters row -->
+      <div class="grade-filter">
+        <span class="grade-filter-label">⚽ Sport:</span>
+        <select class="grade-select" id="lb-sport-select" onchange="onLbSportChange()" style="min-width:140px"></select>
+        <span class="grade-filter-label" style="margin-left:8px">🎓 Grade:</span>
+        <select class="grade-select" id="lb-grade-select" onchange="onGradeChange()">
+          <option value="all">All Grades</option>
+          <option value="HS">High School</option>
+          <option value="7/8">7th / 8th Grade</option>
+          <option value="5/6">5th / 6th Grade</option>
+          <option value="3/4">3rd / 4th Grade</option>
+          <option value="1/2">1st / 2nd Grade</option>
+        </select>
+      </div>
+      <!-- drill sub-tabs rendered dynamically -->
+      <div class="lb-tabs" id="lb-drill-tabs"></div>
+      <!-- drill panels rendered dynamically -->
+      <div id="lb-drill-panels"></div>
+    </div>
+
+    <!-- MANAGE TAB -->
+    <div class="panel" id="tab-manage">
+      <div class="card">
+        <div class="card-title"><span>⚙️</span> My Players</div>
+        <p style="font-size:.82rem;color:var(--text-lt);font-weight:700;margin-bottom:2px">You can remove your own players.</p>
+        <div id="school-display" style="font-size:.85rem;color:var(--grass);font-weight:700;margin-bottom:10px">🏫 School: <span id="current-school-display">Loading...</span></div>
+        <div class="mgr-list" id="mgr-list"><div class="empty"><span class="ei">👤</span>No players yet.</div></div>
+      </div>
+      <div id="admin-section" style="display:none">
+        <div class="card">
+          <div class="card-title"><span>🏫</span> Admin: Create School Code</div>
+          <p style="font-size:.82rem;color:var(--text-lt);font-weight:700;margin-bottom:14px">Create a school code for parents/coaches to use when signing up.</p>
+          <div class="fields f2" style="margin-bottom:12px">
+            <div class="f"><label>School Name</label><input type="text" id="new-school-name" placeholder="e.g. Lakewood High School"></div>
+            <div class="f"><label>School Code</label><input type="text" id="new-school-code" placeholder="e.g. LAKEWOOD2025" style="text-transform:uppercase" maxlength="20"></div>
+          </div>
+          <button class="btn btn-green" onclick="createSchoolCode()">Create Code ＋</button>
+          <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border)">
+            <p style="font-size:.8rem;color:var(--text-lt);font-weight:700;margin-bottom:10px;text-transform:uppercase">Existing Codes:</p>
+            <div id="school-codes-list" style="font-size:.9rem;color:var(--text-md)"><span style="color:var(--text-lt)">None yet</span></div>
+          </div>
+        </div>
+
+        <div class="card danger-card">
+          <div class="card-title" style="color:var(--red)"><span>🗑️</span> Admin: Reset All Data</div>
+          <p style="color:var(--text-md);font-size:.9rem;margin-bottom:14px">🔒 Permanently deletes every player and session in your school.</p>
+          <button class="btn btn-red" onclick="guardedAction('reset')">Reset Everything</button>
+        </div>
+      </div>
+
+      <button id="admin-unlock-btn" class="btn btn-green" onclick="unlockAdminSection()" style="margin-top:20px">🔓 Unlock Admin Section</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="session-warning" class="hidden">
+  ⏱ Your session will expire in 1 minute due to inactivity.
+  <button class="sw-btn" onclick="resetSessionTimer()">Stay Signed In</button>
+  <button class="sw-btn" onclick="window.signOut()">Sign Out</button>
+</div>
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp }        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, setDoc, addDoc, deleteDoc, getDocs,
+         onSnapshot, query, where, orderBy }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+         onAuthStateChanged, signOut as fbSignOut, updateProfile }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// ── 🔥 REPLACE WITH YOUR FIREBASE CONFIG ───────────────────
+const firebaseConfig = {
+  apiKey:      "AIzaSyBhb2NkSfvAWdgrDmN15QaJxi9D0MW28Hw",
+  authDomain:  "lacrosse-8cac2.firebaseapp.com",
+  projectId:   "lacrosse-8cac2",
+  appId:       "1:98850780334:web:76356f8230b503121b693f"
+};
+// ───────────────────────────────────────────────────────────
+
+const app  = initializeApp(firebaseConfig);
+const db   = getFirestore(app);
+const auth = getAuth(app);
+
+// ── Sport configuration ───────────────────────────────────
+const SPORTS_CONFIG = {
+  lacrosse: {
+    label: 'Lacrosse', emoji: '🥍', accent: '#1a7a3a',
+    positions: ['Goalie','Attack','Midfielder','Defender'],
+    drills: [
+      { key:'Shooting',      id:'d-shooting',      emoji:'🎯', accent:'#d63030', cls:'shooting'      },
+      { key:'Wall Balls',    id:'d-wallballs',     emoji:'🧱', accent:'#2196c4', cls:'wallballs'     },
+      { key:'Ground Balls',  id:'d-groundballs',   emoji:'⬇️', accent:'#1a7a3a', cls:'groundballs'   },
+      { key:'Footwork',      id:'d-footwork',      emoji:'👟', accent:'#7c3aed', cls:'footwork'      },
+      { key:'Goalie Drills', id:'d-goaliedrills',  emoji:'🥅', accent:'#0f4d24', cls:'goaliedrills'  },
+      { key:'Faceoff Drills',id:'d-faceoffdrills', emoji:'🤜', accent:'#b45309', cls:'faceoffdrills' },
+    ]
+  },
+  soccer: {
+    label: 'Soccer', emoji: '⚽', accent: '#166534',
+    positions: ['Goalkeeper','Defender','Midfielder','Forward'],
+    drills: [
+      { key:'Passing',       id:'d-passing',       emoji:'🎯', accent:'#166534', cls:'passing'       },
+      { key:'Shooting',      id:'d-shooting',      emoji:'🥅', accent:'#d63030', cls:'shooting'      },
+      { key:'Dribbling',     id:'d-dribbling',     emoji:'🌀', accent:'#2196c4', cls:'dribbling'     },
+      { key:'Defending',     id:'d-defending',     emoji:'🛡️', accent:'#7c3aed', cls:'defending'     },
+      { key:'Set Pieces',    id:'d-setpieces',     emoji:'📐', accent:'#b45309', cls:'setpieces'     },
+      { key:'Conditioning',  id:'d-conditioning',  emoji:'🏃', accent:'#0f4d24', cls:'conditioning'  },
+    ]
+  },
+  baseball: {
+    label: 'Baseball', emoji: '⚾', accent: '#1e3a8a',
+    positions: ['Pitcher','Catcher','Infielder','Outfielder','Designated Hitter'],
+    drills: [
+      { key:'Batting',       id:'d-batting',       emoji:'🏏', accent:'#d63030', cls:'batting'       },
+      { key:'Fielding',      id:'d-fielding',      emoji:'🧤', accent:'#1e3a8a', cls:'fielding'      },
+      { key:'Pitching',      id:'d-pitching',      emoji:'⚾', accent:'#166534', cls:'pitching'      },
+      { key:'Base Running',  id:'d-baserunning',   emoji:'🏃', accent:'#7c3aed', cls:'baserunning'   },
+      { key:'Catching',      id:'d-catching',      emoji:'🥅', accent:'#b45309', cls:'catching'      },
+      { key:'Conditioning',  id:'d-conditioning',  emoji:'💪', accent:'#0f4d24', cls:'conditioning'  },
+    ]
+  },
+  basketball: {
+    label: 'Basketball', emoji: '🏀', accent:'#c2410c',
+    positions: ['Point Guard','Shooting Guard','Small Forward','Power Forward','Center'],
+    drills: [
+      { key:'Shooting',      id:'d-shooting',      emoji:'🎯', accent:'#c2410c', cls:'shooting'      },
+      { key:'Dribbling',     id:'d-dribbling',     emoji:'🌀', accent:'#2196c4', cls:'dribbling'     },
+      { key:'Passing',       id:'d-passing',       emoji:'↔️', accent:'#166534', cls:'passing'       },
+      { key:'Defense',       id:'d-defense',       emoji:'🛡️', accent:'#7c3aed', cls:'defense'       },
+      { key:'Rebounding',    id:'d-rebounding',    emoji:'⬆️', accent:'#b45309', cls:'rebounding'    },
+      { key:'Conditioning',  id:'d-conditioning',  emoji:'🏃', accent:'#0f4d24', cls:'conditioning'  },
+    ]
+  },
+  football: {
+    label: 'Football', emoji: '🏈', accent:'#92400e',
+    positions: ['Quarterback','Running Back','Wide Receiver','Tight End','Offensive Line','Defensive Line','Linebacker','Cornerback','Safety','Kicker'],
+    drills: [
+      { key:'Route Running',  id:'d-routerunning', emoji:'📐', accent:'#d63030', cls:'routerunning'  },
+      { key:'Throwing',       id:'d-throwing',     emoji:'🏈', accent:'#92400e', cls:'throwing'      },
+      { key:'Blocking',       id:'d-blocking',     emoji:'🛡️', accent:'#1e3a8a', cls:'blocking'      },
+      { key:'Tackling',       id:'d-tackling',     emoji:'💥', accent:'#7c3aed', cls:'tackling'      },
+      { key:'Footwork',       id:'d-footwork',     emoji:'👟', accent:'#166534', cls:'footwork'      },
+      { key:'Conditioning',   id:'d-conditioning', emoji:'🏃', accent:'#0f4d24', cls:'conditioning'  },
+    ]
+  },
+  swimming: {
+    label: 'Swimming', emoji: '🏊', accent:'#0284c7',
+    positions: ['Freestyle','Backstroke','Breaststroke','Butterfly','Individual Medley','Relay'],
+    drills: [
+      { key:'Freestyle',     id:'d-freestyle',     emoji:'🏊', accent:'#0284c7', cls:'freestyle'     },
+      { key:'Backstroke',    id:'d-backstroke',    emoji:'🔄', accent:'#2196c4', cls:'backstroke'    },
+      { key:'Breaststroke',  id:'d-breaststroke',  emoji:'🐸', accent:'#166534', cls:'breaststroke'  },
+      { key:'Butterfly',     id:'d-butterfly',     emoji:'🦋', accent:'#7c3aed', cls:'butterfly'     },
+      { key:'Starts & Turns',id:'d-startsturns',   emoji:'🔁', accent:'#b45309', cls:'startsturns'   },
+      { key:'Endurance',     id:'d-endurance',     emoji:'💪', accent:'#0f4d24', cls:'endurance'     },
+    ]
+  },
+};
+
+// Sport keyword → sport key mapping (for school code parsing)
+const SPORT_KEYWORDS = {
+  lacrosse: ['LAX','LACROSSE'],
+  soccer:   ['SOCCER','SOC'],
+  baseball: ['BASEBALL','BASE','BB'],
+  basketball:['BASKETBALL','BBALL','HOOPS'],
+  football: ['FOOTBALL','FB'],
+  swimming: ['SWIM','SWIMMING'],
+};
+
+function detectSportFromCode(schoolCode) {
+  if (!schoolCode) return 'lacrosse';
+  const upper = schoolCode.toUpperCase();
+  for (const [sport, keywords] of Object.entries(SPORT_KEYWORDS)) {
+    if (keywords.some(kw => upper.includes(kw))) return sport;
+  }
+  return 'lacrosse'; // default
+}
+
+// Active sport for the current user (set at login, can change per leaderboard view)
+let currentSport = 'lacrosse';
+let DRILLS = SPORTS_CONFIG.lacrosse.drills; // kept in sync with currentSport
+
+function setSport(sport) {
+  currentSport = sport;
+  DRILLS = SPORTS_CONFIG[sport].drills;
+}
+
+// ── School themes ─────────────────────────────────────────
+const SCHOOL_THEMES = {
+  // Boerne Lacrosse — Navy & Silver
+  'BOERNE': {
+    name: 'Boerne Lacrosse',
+    primary:   '#1a2a5e',   // navy
+    primaryLt: '#2a3f8f',
+    primaryDk: '#0e1a3d',
+    accent:    '#a8b4c8',   // silver
+    accentDk:  '#7a8fa8',
+    field:     '#eaecf4',
+    chalk:     '#f0f2f8',
+    border:    '#c8cfe8',
+    text:      '#0d1220',
+    textMd:    '#3a4466',
+    textLt:    '#7a88aa',
+    shadow:    '0 4px 24px rgba(10,20,60,0.12)',
+    shadowLg:  '0 12px 48px rgba(10,20,60,0.18)',
+    bgStripe1: 'rgba(26,42,94,0.045)',
+    bgStripe2: 'rgba(26,42,94,0.02)',
+  },
+  // TMI — Orange & Black
+  'TMI': {
+    name: 'TMI',
+    primary:   '#c45000',   // deep orange
+    primaryLt: '#e86010',
+    primaryDk: '#7a3000',
+    accent:    '#f5a623',   // gold-orange
+    accentDk:  '#d4861a',
+    field:     '#fdf0e6',
+    chalk:     '#fdf5ee',
+    border:    '#f5d8b8',
+    text:      '#1a0d00',
+    textMd:    '#5a3a1a',
+    textLt:    '#a07040',
+    shadow:    '0 4px 24px rgba(80,30,0,0.12)',
+    shadowLg:  '0 12px 48px rgba(80,30,0,0.18)',
+    bgStripe1: 'rgba(196,80,0,0.045)',
+    bgStripe2: 'rgba(196,80,0,0.02)',
+  },
+  // Smithson Valley — Navy & White
+  'SV': {
+    name: 'Smithson Valley',
+    primary:   '#0d2060',   // navy
+    primaryLt: '#1a3494',
+    primaryDk: '#081440',
+    accent:    '#90a8d0',   // light blue-silver
+    accentDk:  '#6080b0',
+    field:     '#e8ecf8',
+    chalk:     '#f2f4fc',
+    border:    '#c0ccec',
+    text:      '#08102a',
+    textMd:    '#2a3a60',
+    textLt:    '#6878a8',
+    shadow:    '0 4px 24px rgba(8,16,60,0.12)',
+    shadowLg:  '0 12px 48px rgba(8,16,60,0.18)',
+    bgStripe1: 'rgba(13,32,96,0.045)',
+    bgStripe2: 'rgba(13,32,96,0.02)',
+  },
+};
+
+function applySchoolTheme(schoolCode) {
+  // Match by exact key first, then by checking if the school code *contains*
+  // a known keyword — handles any suffix/prefix users may have typed at signup.
+  let theme = SCHOOL_THEMES[schoolCode];
+  if (!theme && schoolCode) {
+    const upper = schoolCode.toUpperCase();
+    const matchKey = Object.keys(SCHOOL_THEMES).find(k => upper.includes(k) || k.includes(upper));
+    if (matchKey) theme = SCHOOL_THEMES[matchKey];
+  }
+  const root  = document.documentElement;
+  if (!theme) {
+    // Fall back to default green lacrosse theme
+    root.removeAttribute('data-school');
+    ['--grass','--grass-lt','--grass-dk','--field','--chalk','--gold','--gold-dk',
+     '--border','--text','--text-md','--text-lt','--shadow','--shadow-lg'].forEach(v => root.style.removeProperty(v));
+    document.querySelector('.field-bg').style.background = '';
+    document.title = 'Lax Practice Tracker 🥍';
+    return;
+  }
+  root.setAttribute('data-school', schoolCode);
+  root.style.setProperty('--grass',    theme.primary);
+  root.style.setProperty('--grass-lt', theme.primaryLt);
+  root.style.setProperty('--grass-dk', theme.primaryDk);
+  root.style.setProperty('--field',    theme.field);
+  root.style.setProperty('--chalk',    theme.chalk);
+  root.style.setProperty('--gold',     theme.accent);
+  root.style.setProperty('--gold-dk',  theme.accentDk);
+  root.style.setProperty('--border',   theme.border);
+  root.style.setProperty('--text',     theme.text);
+  root.style.setProperty('--text-md',  theme.textMd);
+  root.style.setProperty('--text-lt',  theme.textLt);
+  root.style.setProperty('--shadow',   theme.shadow);
+  root.style.setProperty('--shadow-lg',theme.shadowLg);
+  // Update the field-stripe background to match school color
+  document.querySelector('.field-bg').style.background =
+    `repeating-linear-gradient(180deg,${theme.bgStripe1} 0px,${theme.bgStripe1} 60px,${theme.bgStripe2} 60px,${theme.bgStripe2} 120px)`;
+  document.title = `${theme.name} · Lax Practice Tracker 🥍`;
+}
+
+let currentUser  = null;
+let currentSchoolCode = null;  // Track the user's school code
+let allSchoolCodes = [];       // Available school codes
+let myChildren   = [];   // current user's players
+let allChildren  = [];   // all players from same school (for leaderboard)
+let mySessions   = [];   // current user's sessions
+let allSessions  = [];   // all sessions from same school (for leaderboard)
+let selId        = null;
+let adminPassword = null;
+let authUntil    = 0;
+let pendingAction = null;
+
+let unsubMyKids, unsubAllKids, unsubMySess, unsubAllSess;
+
+// ── Session timeout (15 min inactivity) ──────────────────
+const SESSION_TIMEOUT_MS  = 15 * 60 * 1000;  // 15 minutes
+const SESSION_WARNING_MS  = 60 * 1000;        // warn 1 min before
+let sessionTimer   = null;
+let sessionWarning = null;
+
+function resetSessionTimer() {
+  if (!currentUser) return;
+  clearTimeout(sessionTimer);
+  clearTimeout(sessionWarning);
+  dismissTimeoutWarning();
+  sessionWarning = setTimeout(showTimeoutWarning,  SESSION_TIMEOUT_MS - SESSION_WARNING_MS);
+  sessionTimer   = setTimeout(forceSessionTimeout, SESSION_TIMEOUT_MS);
+}
+
+function stopSessionTimer() {
+  clearTimeout(sessionTimer);
+  clearTimeout(sessionWarning);
+  dismissTimeoutWarning();
+  sessionTimer = sessionWarning = null;
+}
+
+async function forceSessionTimeout() {
+  dismissTimeoutWarning();
+  await fbSignOut(auth);
+  toast('Session expired — please sign in again.', true);
+}
+
+function showTimeoutWarning() {
+  const el = document.getElementById('session-warning');
+  if (el) el.classList.remove('hidden');
+}
+
+function dismissTimeoutWarning() {
+  const el = document.getElementById('session-warning');
+  if (el) el.classList.add('hidden');
+}
+
+// Reset timer on any meaningful user interaction
+['click','keydown','mousemove','touchstart','scroll'].forEach(evt =>
+  document.addEventListener(evt, () => { if (currentUser) resetSessionTimer(); }, { passive: true })
+);
+
+// ── Auth state ────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  document.getElementById('init-loading').style.display = 'none';
+  if (user) {
+    currentUser = user;
+    // Load user's school code — retry briefly in case the Firestore write
+    // (from doSignUp) hasn't fully propagated yet when this fires.
+    let userDoc = await getDoc(doc(db, 'users', user.uid));
+    if (!userDoc.exists()) {
+      await new Promise(r => setTimeout(r, 1200));
+      userDoc = await getDoc(doc(db, 'users', user.uid));
+    }
+    currentSchoolCode = userDoc.exists() ? userDoc.data().schoolCode : null;
+    
+    // Load all school codes for reference
+    const schoolsSnap = await getDocs(collection(db, 'schoolCodes'));
+    allSchoolCodes = schoolsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    
+    if (!currentSchoolCode) {
+      // User signed in but has no school code (shouldn't happen in normal flow)
+      toast('Error: No school code found. Please contact an admin.', true);
+      return;
+    }
+    
+    console.log('🏫 School code for this user:', currentSchoolCode);
+    setSport(detectSportFromCode(currentSchoolCode));
+    applySchoolTheme(currentSchoolCode);
+    updateHeroSport();
+    document.getElementById('auth-screen').style.display  = 'none';
+    document.getElementById('app-body').style.display     = 'block';
+    document.getElementById('hero-auth').style.display    = 'flex';
+    document.getElementById('hero-email').textContent     = user.displayName || user.email;
+    await loadAdminPassword();
+    startListeners();
+    resetSessionTimer();
+  } else {
+    currentUser = null;
+    currentSchoolCode = null;
+    allSchoolCodes = [];
+    stopListeners();
+    stopSessionTimer();
+    setSport('lacrosse');
+    applySchoolTheme(null);
+    updateHeroSport();
+    document.getElementById('app-body').style.display    = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('hero-auth').style.display   = 'none';
+    resetLocalState();
+  }
+});
+
+function resetLocalState() {
+  myChildren=[]; allChildren=[]; mySessions=[]; allSessions=[]; selId=null;
+  renderStats(); renderChips(); renderSessions();
+}
+
+function stopListeners() {
+  if (unsubMyKids)  unsubMyKids();
+  if (unsubAllKids) unsubAllKids();
+  if (unsubMySess)  unsubMySess();
+  if (unsubAllSess) unsubAllSess();
+}
+
+function startListeners() {
+  setSync('busy','Connecting…');
+
+  // My players
+  const myKidsQ = query(collection(db,'children'), where('uid','==',currentUser.uid), orderBy('createdAt'));
+  unsubMyKids = onSnapshot(myKidsQ, snap => {
+    myChildren = snap.docs.map(d=>({id:d.id,...d.data()}));
+    console.log('My players loaded:', myChildren.length);
+    renderStats(); renderChips(); renderSessions();
+  }, err => { setSync('bad','Error'); toast(err.message,true); });
+
+  // All players from same school (for leaderboard) - no orderBy to avoid index requirement
+  const allKidsQ = query(collection(db,'children'), where('schoolCode','==',currentSchoolCode));
+  unsubAllKids = onSnapshot(allKidsQ, snap => {
+    allChildren = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+    console.log('All players (leaderboard):', allChildren.length, 'schoolCode:', currentSchoolCode);
+    if (document.getElementById('tab-board').classList.contains('on')) renderAllLeaderboards();
+  });
+
+  // My sessions
+  const mySessQ = query(collection(db,'sessions'), where('uid','==',currentUser.uid), orderBy('date'));
+  unsubMySess = onSnapshot(mySessQ, snap => {
+    mySessions = snap.docs.map(d=>({id:d.id,...d.data()}));
+    console.log('My sessions loaded:', mySessions.length);
+    renderStats(); renderSessions();
+    setSync('ok','Live · Field Ready');
+  renderLbSportSelect();
+  updateHeroSport();
+  }, err => { setSync('bad','Error'); toast(err.message,true); });
+
+  // All sessions from same school (for leaderboard) - no orderBy to avoid index requirement
+  const allSessQ = query(collection(db,'sessions'), where('schoolCode','==',currentSchoolCode));
+  unsubAllSess = onSnapshot(allSessQ, snap => {
+    allSessions = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b) => (a.date || '').localeCompare(b.date || ''));
+    console.log('All sessions (leaderboard):', allSessions.length, 'schoolCode:', currentSchoolCode);
+    if (document.getElementById('tab-board').classList.contains('on')) renderAllLeaderboards();
+  });
+}
+
+// ── Admin password ────────────────────────────────────────
+async function loadAdminPassword() {
+  try {
+    const snap = await getDoc(doc(db,'config','admin'));
+    adminPassword = (snap.exists() && snap.data().password) ? snap.data().password : null;
+  } catch(e) { adminPassword = null; }
+}
+
+// ── Sign in / Sign up ─────────────────────────────────────
+window.switchView = v => {
+  document.getElementById('view-signin').style.display = v==='signin' ? 'block':'none';
+  document.getElementById('view-signup').style.display = v==='signup' ? 'block':'none';
+};
+
+async function loadAvailableSchools() {
+  // No longer needed - parents enter school code manually
+}
+
+window.doSignIn = async () => {
+  const email = document.getElementById('si-email').value.trim();
+  const pass  = document.getElementById('si-pass').value;
+  const errEl = document.getElementById('si-err');
+  errEl.textContent = '';
+  if (!email||!pass) { errEl.textContent='Please fill in all fields.'; return; }
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    resetSessionTimer();
+  } catch(e) {
+    errEl.textContent = friendlyAuthError(e.code);
+  }
+};
+
+window.doSignUp = async () => {
+  const name  = document.getElementById('su-name').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const code  = document.getElementById('su-code').value.trim().toUpperCase();
+  const pass  = document.getElementById('su-pass').value;
+  const errEl = document.getElementById('su-err');
+  errEl.textContent = '';
+  if (!name||!email||!code||!pass) { errEl.textContent='Please fill in all fields.'; return; }
+  if (pass.length < 6) { errEl.textContent='Password must be at least 6 characters.'; return; }
+  if (code.length < 3) { errEl.textContent='School code must be at least 3 characters.'; return; }
+  // Check school code existence BEFORE any auth call
+  try {
+    const schoolCodeDoc = await getDoc(doc(db, 'schoolCodes', code));
+    if (!schoolCodeDoc.exists()) {
+      errEl.textContent = 'Invalid school code. Please check and try again.';
+      return;
+    }
+  } catch (e) {
+    errEl.textContent = 'Error checking school code. Please try again.';
+    return;
+  }
+  // Now create auth user — write profile + user doc together BEFORE
+  // onAuthStateChanged can read them, eliminating the race condition.
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await Promise.all([
+      updateProfile(cred.user, { displayName: name }),
+      setDoc(doc(db, 'users', cred.user.uid), {
+        uid: cred.user.uid,
+        schoolCode: code,
+        createdAt: new Date().toISOString()
+      })
+    ]);
+    // Re-trigger onAuthStateChanged so it re-reads the now-complete user doc.
+    await cred.user.reload();
+  } catch(e) {
+    errEl.textContent = friendlyAuthError(e.code);
+  }
+};
+
+window.signOut = async () => {
+  await fbSignOut(auth);
+  toast('Signed out');
+};
+
+function friendlyAuthError(code) {
+  const map = {
+    'auth/invalid-email':            'Invalid email address.',
+    'auth/user-not-found':           'No account found with that email.',
+    'auth/wrong-password':           'Incorrect password.',
+    'auth/email-already-in-use':     'An account with that email already exists.',
+    'auth/weak-password':            'Password must be at least 6 characters.',
+    'auth/invalid-credential':       'Email or password is incorrect.',
+    'auth/too-many-requests':        'Too many attempts. Please try again later.',
+  };
+  return map[code] || 'Something went wrong. Please try again.';
+}
+
+// ── Admin password gate (reset-all only) ─────────────────
+window.guardedAction = (action, id) => {
+  if (!adminPassword || Date.now() < authUntil) { runAction(action,id); return; }
+  pendingAction = {action,id};
+  document.getElementById('pw-input').value='';
+  document.getElementById('pw-error').textContent='';
+  document.getElementById('pw-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('pw-input').focus(),80);
+};
+
+window.confirmPassword = () => {
+  const val = document.getElementById('pw-input').value;
+  if (val === adminPassword) {
+    authUntil = Date.now() + 5*60*1000;
+    document.getElementById('pw-modal').classList.add('hidden');
+    if (pendingAction) {
+      if (pendingAction.action === 'unlockAdmin') {
+        document.getElementById('admin-section').style.display = 'block';
+        document.getElementById('admin-unlock-btn').style.display = 'none';
+      } else {
+        runAction(pendingAction.action, pendingAction.id);
+      }
+      pendingAction = null;
+    }
+  } else {
+    const inp = document.getElementById('pw-input');
+    document.getElementById('pw-error').textContent = 'Incorrect password — try again';
+    inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake');
+    inp.value=''; setTimeout(()=>inp.focus(),50);
+  }
+};
+
+window.unlockAdminSection = () => {
+  if (!adminPassword || Date.now() < authUntil) {
+    document.getElementById('admin-section').style.display = 'block';
+    document.getElementById('admin-unlock-btn').style.display = 'none';
+    return;
+  }
+  pendingAction = {action: 'unlockAdmin'};
+  document.getElementById('pw-input').value='';
+  document.getElementById('pw-error').textContent='';
+  document.getElementById('pw-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('pw-input').focus(),80);
+};
+
+window.cancelPassword = () => { pendingAction=null; document.getElementById('pw-modal').classList.add('hidden'); };
+window.toggleEye = () => {
+  const inp=document.getElementById('pw-input');
+  inp.type=inp.type==='password'?'text':'password';
+  document.getElementById('eye-btn').textContent=inp.type==='password'?'👁':'🙈';
+};
+
+async function runAction(action,id) {
+  if (action==='removeChild') await doRemoveChild(id);
+  if (action==='reset')       await doResetAll();
+}
+
+// ── Sport UI helpers ──────────────────────────────────────
+function updateHeroSport() {
+  const sp = SPORTS_CONFIG[currentSport] || SPORTS_CONFIG.lacrosse;
+  document.getElementById('hero-sport-icon').textContent = sp.emoji;
+  document.getElementById('hero-sport-title').innerHTML =
+    `${sp.label}<em>Practice Tracker</em>`;
+  document.getElementById('hero-sport-sub').textContent =
+    'Log your reps · Own the field · Top the board';
+  const addIcon = document.getElementById('add-player-sport-icon');
+  if (addIcon) addIcon.textContent = sp.emoji;
+  const noKidsIcon = document.getElementById('no-kids-icon');
+  if (noKidsIcon) noKidsIcon.textContent = sp.emoji;
+  renderPositionOptions(currentSport);
+  renderDrillGrid(currentSport);
+  renderLbSportSelect();
+  renderLbDrillTabs(currentSport);
+}
+
+function renderPositionOptions(sport) {
+  const sel = document.getElementById('add-position');
+  if (!sel) return;
+  const positions = SPORTS_CONFIG[sport]?.positions || SPORTS_CONFIG.lacrosse.positions;
+  sel.innerHTML = `<option value="" disabled selected>Select position…</option>` +
+    positions.map(p => `<option value="${p}">${p}</option>`).join('');
+}
+
+function renderDrillGrid(sport) {
+  const grid = document.getElementById('drill-grid');
+  if (!grid) return;
+  const drills = SPORTS_CONFIG[sport]?.drills || SPORTS_CONFIG.lacrosse.drills;
+  grid.innerHTML = drills.map(d =>
+    `<input type="checkbox" class="drill-toggle" id="${d.id}" value="${d.key}">` +
+    `<label for="${d.id}">${d.emoji} ${d.key}</label>`
+  ).join('');
+}
+
+// Active sport for leaderboard (can differ from currentSport)
+let activeLbSport = 'lacrosse';
+
+function renderLbSportSelect() {
+  const sel = document.getElementById('lb-sport-select');
+  if (!sel) return;
+  // Build list of sports present in school data
+  const sportsInSchool = [...new Set(allChildren.map(c => c.sport || detectSportFromCode(currentSchoolCode)))];
+  const allSports = Object.keys(SPORTS_CONFIG).filter(s =>
+    s === currentSport || sportsInSchool.includes(s)
+  );
+  // Always include at least the current sport
+  if (!allSports.includes(currentSport)) allSports.unshift(currentSport);
+  sel.innerHTML = allSports.map(s =>
+    `<option value="${s}" ${s===activeLbSport?'selected':''}>${SPORTS_CONFIG[s].emoji} ${SPORTS_CONFIG[s].label}</option>`
+  ).join('');
+  activeLbSport = sel.value;
+}
+
+function renderLbDrillTabs(sport) {
+  const drills = SPORTS_CONFIG[sport]?.drills || SPORTS_CONFIG.lacrosse.drills;
+  const tabsEl   = document.getElementById('lb-drill-tabs');
+  const panelsEl = document.getElementById('lb-drill-panels');
+  if (!tabsEl || !panelsEl) return;
+
+  tabsEl.innerHTML =
+    `<button class="lb-tab total on" onclick="goLbTab('total',this)">🏆 Total Time</button>` +
+    drills.map(d =>
+      `<button class="lb-tab ${d.cls}" onclick="goLbTab('${d.cls}',this)">${d.emoji} ${d.key}</button>`
+    ).join('');
+
+  panelsEl.innerHTML =
+    `<div class="lb-panel on" id="lbp-total">
+       <div class="card"><div class="drill-board-header"><span class="drill-board-icon">🏆</span>
+         <div><div class="drill-board-title">Total Practice Time</div>
+         <div class="drill-board-sub" id="lbs-total">All grades · all sessions</div></div></div>
+         <div id="lb-total"></div></div></div>` +
+    drills.map(d =>
+      `<div class="lb-panel" id="lbp-${d.cls}">
+         <div class="card"><div class="drill-board-header"><span class="drill-board-icon">${d.emoji}</span>
+           <div><div class="drill-board-title">${d.key}</div>
+           <div class="drill-board-sub" id="lbs-${d.cls}">All grades · ${d.key.toLowerCase()} sessions</div></div></div>
+           <div id="lb-${d.cls}"></div></div></div>`
+    ).join('');
+}
+
+window.onLbSportChange = function() {
+  activeLbSport = document.getElementById('lb-sport-select').value;
+  renderLbDrillTabs(activeLbSport);
+  renderAllLeaderboards();
+};
+
+// Sport selector in log section (for multi-sport children)
+let logSport = null; // null = use currentSport
+
+function renderSportSelectorForChild(childId) {
+  const child = myChildren.find(c => c.id === childId);
+  const wrap = document.getElementById('sport-selector-wrap');
+  const sel  = document.getElementById('log-sport-select');
+  if (!child || !child.sports || child.sports.length <= 1) {
+    wrap.style.display = 'none';
+    // Set logSport to child's single sport or default
+    logSport = (child && child.sports && child.sports[0]) || currentSport;
+    renderDrillGrid(logSport);
+    return;
+  }
+  wrap.style.display = 'block';
+  sel.innerHTML = child.sports.map(s =>
+    `<option value="${s}">${SPORTS_CONFIG[s]?.emoji || ''} ${SPORTS_CONFIG[s]?.label || s}</option>`
+  ).join('');
+  logSport = sel.value;
+  renderDrillGrid(logSport);
+}
+
+window.onLogSportChange = function() {
+  logSport = document.getElementById('log-sport-select').value;
+  renderDrillGrid(logSport);
+};
+
+// ── Render ────────────────────────────────────────────────
+function renderStats() {
+  document.getElementById('s-kids').textContent = myChildren.length;
+  // Show selected player's stats, or account totals if no player selected
+  if (selId && myChildren.find(c=>c.id===selId)) {
+    const playerSess = mySessions.filter(s=>s.childId===selId);
+    const child = myChildren.find(c=>c.id===selId);
+    document.getElementById('s-sess').textContent = playerSess.length;
+    document.getElementById('s-mins').textContent = playerSess.reduce((a,s)=>a+s.minutes,0);
+    document.getElementById('s-sess-label').textContent = child.name + "'s Sessions";
+    document.getElementById('s-mins-label').textContent = child.name + "'s Mins";
+  } else {
+    document.getElementById('s-sess').textContent = mySessions.length;
+    document.getElementById('s-mins').textContent = mySessions.reduce((a,s)=>a+s.minutes,0);
+    document.getElementById('s-sess-label').textContent = '📋 My Sessions';
+    document.getElementById('s-mins-label').textContent = '⏱ My Minutes';
+  }
+}
+
+function renderChips() {
+  const wrap=document.getElementById('chips'), noKids=document.getElementById('no-kids'), logSec=document.getElementById('log-section');
+  if (!myChildren.length) { noKids.style.display='block'; logSec.style.display='none'; document.getElementById('hist-card').style.display='none'; return; }
+  noKids.style.display='none'; logSec.style.display='block';
+  if (selId && !myChildren.find(c=>c.id===selId)) selId=myChildren[0].id;
+  if (!selId) selId=myChildren[0].id;
+  wrap.innerHTML=myChildren.map(c=>`<button class="chip c${c.colorIdx} ${selId===c.id?'on':''}" onclick="window._sel('${c.id}')">${c.name}</button>`).join('');
+  renderSportSelectorForChild(selId);
+}
+
+function renderSessions() {
+  const card=document.getElementById('hist-card'), nameEl=document.getElementById('hist-name'), body=document.getElementById('hist-body');
+  if (!selId||!myChildren.length){card.style.display='none';return;}
+  const child=myChildren.find(c=>c.id===selId);
+  if (!child){card.style.display='none';return;}
+  card.style.display='block';
+  nameEl.textContent=child.name.toUpperCase();
+  const cs=mySessions.filter(s=>s.childId===selId).sort((a,b)=>b.date.localeCompare(a.date));
+  if (!cs.length){body.innerHTML=`<div class="empty"><span class="ei">📅</span>No sessions logged yet for ${child.name}.</div>`;return;}
+  const total=cs.reduce((a,s)=>a+s.minutes,0);
+  body.innerHTML=`
+    <p style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--text-md);margin-bottom:10px;font-size:.95rem;text-transform:uppercase;letter-spacing:.05em">
+      Total: <span style="color:var(--grass);font-size:1.2rem">${total}</span> mins &nbsp;·&nbsp;
+      <span style="color:var(--grass);font-size:1.2rem">${cs.length}</span> session${cs.length!==1?'s':''}
+    </p>
+    <table class="tbl">
+      <thead><tr><th>Date</th><th>Mins</th><th>Drills</th><th></th></tr></thead>
+      <tbody>${cs.map(s=>{
+        const sessAllDrills = Object.values(SPORTS_CONFIG).flatMap(sp=>sp.drills);
+        const tags=(s.drills&&s.drills.length)
+          ? `<div class="drill-tags">${s.drills.map(d=>{const dr=sessAllDrills.find(x=>x.key===d);return`<span class="drill-tag">${dr?dr.emoji:''} ${d}</span>`;}).join('')}</div>`
+          : `<span style="color:var(--text-lt);font-size:.8rem">General</span>`;
+        return`<tr><td>${fmtDate(s.date)}</td><td><span class="badge">${s.minutes} min</span></td><td>${tags}</td><td><button class="btn-sm" onclick="window.delSession('${s.id}')">✕</button></td></tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+
+const medals=['🥇','🥈','🥉'], rankCls=['r1c','r2c','r3c'];
+
+function buildLbHTML(ranked, accentColor, valueLabel) {
+  if (!ranked.length) return `<div class="lb-empty">No data yet — start logging sessions!</div>`;
+  const max=Math.max(ranked[0].value||1,1);
+  return `<div class="lb">${ranked.map((c,i)=>{
+    const isMe = c.uid === currentUser?.uid;
+    return `<div class="lb-row r${i+1}" style="animation-delay:${i*.05}s">
+      <div class="lb-rank ${rankCls[i]||''}">${medals[i]||`#${i+1}`}</div>
+      <div class="lax-av la${c.colorIdx}">${c.name.slice(0,2).toUpperCase()}</div>
+      <div class="lb-info">
+        <div class="lb-name">${c.name}${isMe?`<span class="my-label">Mine</span>`:''} <span class="pos-badge pos-${c.position||'Attack'}" style="margin-left:4px">${c.position||''}</span> ${c.grade?`<span class="grade-badge grade-${c.grade==='7/8'?'78':'56'}">${c.grade}</span>`:''}</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(c.value/max*100)}%;background:${accentColor}"></div></div>
+        <div style="font-size:.68rem;color:var(--text-lt);font-weight:700;margin-top:3px;text-transform:uppercase;letter-spacing:.06em">${c.sessions} session${c.sessions!==1?'s':''}</div>
+      </div>
+      <div class="lb-stat">
+        <div class="lb-stat-n" style="color:${accentColor}">${c.value}</div>
+        <span class="lb-stat-l">${valueLabel}</span>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+let activeLbGrade = 'all';
+
+window.onGradeChange = function() {
+  activeLbGrade = document.getElementById('lb-grade-select').value;
+  renderAllLeaderboards();
+};
+
+function gradeLabel() {
+  if (activeLbGrade === 'HS')  return 'High School';
+  if (activeLbGrade === '7/8') return '7th / 8th Grade';
+  if (activeLbGrade === '5/6') return '5th / 6th Grade';
+  if (activeLbGrade === '3/4') return '3rd / 4th Grade';
+  if (activeLbGrade === '1/2') return '1st / 2nd Grade';
+  return 'All Grades';
+}
+
+function renderAllLeaderboards() {
+  const sport  = activeLbSport || currentSport;
+  const drills = SPORTS_CONFIG[sport]?.drills || SPORTS_CONFIG.lacrosse.drills;
+
+  // Filter children by grade AND by sport
+  const gradeFiltered = activeLbGrade === 'all'
+    ? allChildren
+    : allChildren.filter(c => c.grade === activeLbGrade);
+
+  const filtered = gradeFiltered.filter(c =>
+    !c.sport || c.sport === sport ||
+    (c.sports && c.sports.includes(sport))
+  );
+
+  // Filter sessions by sport too
+  const sportSessions = allSessions.filter(s =>
+    !s.sport || s.sport === sport
+  );
+
+  const gl = gradeLabel();
+  const totalEl = document.getElementById('lbs-total');
+  if (totalEl) totalEl.textContent = gl + ' · all sessions';
+  drills.forEach(d => {
+    const el = document.getElementById('lbs-' + d.cls);
+    if (el) el.textContent = gl + ' · ' + d.key.toLowerCase() + ' sessions';
+  });
+
+  // Total time board
+  const totalRanked = filtered.map(c=>({
+    ...c,
+    value:    sportSessions.filter(s=>s.childId===c.id).reduce((a,s)=>a+s.minutes,0),
+    sessions: sportSessions.filter(s=>s.childId===c.id).length
+  })).filter(c=>c.value>0).sort((a,b)=>b.value-a.value);
+  const lbTotalEl = document.getElementById('lb-total');
+  if (lbTotalEl) lbTotalEl.innerHTML = buildLbHTML(totalRanked,'var(--gold-dk)','minutes');
+
+  // Per-drill boards
+  drills.forEach(drill=>{
+    const ranked = filtered.map(c=>{
+      const ds = sportSessions.filter(s=>s.childId===c.id && s.drills && s.drills.includes(drill.key));
+      return { ...c, value:ds.length, sessions:ds.length };
+    }).filter(c=>c.value>0).sort((a,b)=>b.value-a.value);
+    const el = document.getElementById('lb-'+drill.cls);
+    if (el) el.innerHTML = buildLbHTML(ranked, drill.accent, 'sessions');
+  });
+}
+
+function renderManage() {
+  const list=document.getElementById('mgr-list');
+  
+  // Display current school code
+  const schoolDisplay = document.getElementById('current-school-display');
+  if (currentSchoolCode) {
+    const schoolData = allSchoolCodes.find(s => s.id === currentSchoolCode);
+    schoolDisplay.textContent = `${schoolData ? schoolData.name : 'Unknown'} (${currentSchoolCode})`;
+  } else {
+    schoolDisplay.textContent = 'Not set';
+    schoolDisplay.style.color = 'var(--red)';
+  }
+  
+  if (!myChildren.length){list.innerHTML=`<div class="empty"><span class="ei">👤</span>No players yet.</div>`;return;}
+  list.innerHTML=myChildren.map(c=>{
+    const total=mySessions.filter(s=>s.childId===c.id).reduce((a,s)=>a+s.minutes,0);
+    const count=mySessions.filter(s=>s.childId===c.id).length;
+    return `<div class="mgr-row">
+      <div class="mgr-info">
+        <div class="lax-av la${c.colorIdx}" style="width:38px;height:38px;font-size:.9rem;border-radius:8px">${c.name.slice(0,2).toUpperCase()}</div>
+        <div>
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.95rem;text-transform:uppercase;letter-spacing:.04em">${c.name}</span>
+            <span class="pos-badge pos-${c.position||'Attack'}">${c.position||''}</span>
+            ${c.grade?`<span class="grade-badge grade-${({'HS':'HS','7/8':'78','5/6':'56','3/4':'34','1/2':'12'}[c.grade]||'78')}">${c.grade}</span>`:''}
+          </div>
+          <div class="mgr-sub">${SPORTS_CONFIG[c.sport||currentSport]?.emoji||'🥍'} ${SPORTS_CONFIG[c.sport||currentSport]?.label||'Lacrosse'} · ${total} mins · ${count} session${count!==1?'s':''}</div>
+        </div>
+      </div>
+      <button class="btn-sm" onclick="window.guardedAction('removeChild','${c.id}')">✕ Remove</button>
+    </div>`;
+  }).join('');
+  renderSchoolCodesDisplay();
+}
+
+async function renderSchoolCodesDisplay() {
+  try {
+    const snap = await getDocs(collection(db, 'schoolCodes'));
+    const codes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const listEl = document.getElementById('school-codes-list');
+    if (codes.length === 0) {
+      listEl.innerHTML = `<span style="color:var(--text-lt)">No school codes yet</span>`;
+    } else {
+      listEl.innerHTML = codes.map(c => `
+        <div style="margin-bottom:8px;padding:8px;background:var(--chalk);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700">${c.name}</div>
+            <div style="font-size:.8rem;color:var(--text-lt);font-family:monospace">${c.id}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch(e) {
+    console.error('Error loading school codes:', e);
+  }
+}
+
+window.createSchoolCode = async () => {
+  const name = document.getElementById('new-school-name').value.trim();
+  const code = document.getElementById('new-school-code').value.trim().toUpperCase();
+  if (!name || !code) {
+    toast('Please fill in school name and code', true);
+    return;
+  }
+  if (code.length < 3) {
+    toast('School code must be at least 3 characters', true);
+    return;
+  }
+  try {
+    await setDoc(doc(db, 'schoolCodes', code), {
+      name: name,
+      createdAt: new Date().toISOString()
+    });
+    document.getElementById('new-school-name').value = '';
+    document.getElementById('new-school-code').value = '';
+    toast(`School code "${code}" created!`);
+    renderSchoolCodesDisplay();
+  } catch(e) {
+    toast('Error creating school code: ' + e.message, true);
+  }
+};
+
+window.bulkAddParentsToUsersCollection = async () => {
+  const input = document.getElementById('bulk-uids-input').value.trim();
+  if (!input) {
+    toast('Please paste User IDs', true);
+    return;
+  }
+  
+  const uids = input.split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+  
+  if (uids.length === 0) {
+    toast('No valid User IDs found', true);
+    return;
+  }
+  
+  if (!confirm(`Create ${uids.length} user document(s)?`)) return;
+  
+  try {
+    let created = 0;
+    for (const uid of uids) {
+      try {
+        await setDoc(doc(db, 'users', uid), {
+          uid: uid,
+          createdAt: new Date().toISOString(),
+          schoolCode: 'BOERNELACROSSE2026',
+          schoolName: 'Boerne'
+        });
+        created++;
+      } catch(e) {
+        console.error(`Failed to create user ${uid}:`, e.message);
+      }
+    }
+    document.getElementById('bulk-uids-input').value = '';
+    toast(`Created ${created}/${uids.length} user document(s)`);
+  } catch(e) {
+    toast('Error: ' + e.message, true);
+  }
+};
+
+window.addParentToUsersCollection = async () => {
+  const uid = document.getElementById('add-uid-input').value.trim();
+  if (!uid) {
+    toast('Please enter a Firebase User ID', true);
+    return;
+  }
+  try {
+    await setDoc(doc(db, 'users', uid), {
+      uid: uid,
+      createdAt: new Date().toISOString(),
+      schoolCode: 'BOERNELACROSSE2026',
+      schoolName: 'Boerne'
+    });
+    document.getElementById('add-uid-input').value = '';
+    toast(`User ${uid} added with schoolCode BOERNELACROSSE2026`);
+  } catch(e) {
+    toast('Error: ' + e.message, true);
+  }
+};
+
+window.bulkCreateUserDocuments = async () => {
+  const output = document.getElementById('verify-output');
+  output.style.display = 'block';
+  output.textContent = 'Scanning database...';
+
+  try {
+    // Get all players
+    const childSnap = await getDocs(collection(db, 'children'));
+    const players = childSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Get all sessions
+    const sessSnap = await getDocs(collection(db, 'sessions'));
+    const sessions = sessSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Count by schoolCode
+    const playersByCode = {};
+    const sessionsByCode = {};
+
+    players.forEach(p => {
+      const code = p.schoolCode || '(no schoolCode)';
+      playersByCode[code] = (playersByCode[code] || 0) + 1;
+    });
+
+    sessions.forEach(s => {
+      const code = s.schoolCode || '(no schoolCode)';
+      sessionsByCode[code] = (sessionsByCode[code] || 0) + 1;
+    });
+
+    // Build output
+    let report = `═══════════════════════════════════\nDATABASE VERIFICATION REPORT\n═══════════════════════════════════\n\n`;
+
+    report += `PLAYERS (Total: ${players.length})\n`;
+    report += `───────────────────────────────────\n`;
+    Object.entries(playersByCode).forEach(([code, count]) => {
+      report += `  ${code}: ${count}\n`;
+    });
+
+    report += `\nSESSIONS (Total: ${sessions.length})\n`;
+    report += `───────────────────────────────────\n`;
+    Object.entries(sessionsByCode).forEach(([code, count]) => {
+      report += `  ${code}: ${count}\n`;
+    });
+
+    report += `\nYOUR SCHOOL CODE\n`;
+    report += `───────────────────────────────────\n`;
+    report += `  ${currentSchoolCode}\n`;
+
+    report += `\nMATCH STATUS\n`;
+    report += `───────────────────────────────────\n`;
+    const playersInYourSchool = playersByCode[currentSchoolCode] || 0;
+    const sessionsInYourSchool = sessionsByCode[currentSchoolCode] || 0;
+    report += `  Players: ${playersInYourSchool}\n`;
+    report += `  Sessions: ${sessionsInYourSchool}\n`;
+
+    if (playersInYourSchool === 0) {
+      report += `\n⚠️ NO PLAYERS with your schoolCode!\n`;
+      if (playersByCode['(no schoolCode)']) {
+        report += `💡 Found ${playersByCode['(no schoolCode)']} players with NO schoolCode\n`;
+        report += `   → Try "Update ALL Players" button\n`;
+      }
+    }
+    if (sessionsInYourSchool === 0) {
+      report += `\n⚠️ NO SESSIONS with your schoolCode!\n`;
+      if (sessionsByCode['(no schoolCode)']) {
+        report += `💡 Found ${sessionsByCode['(no schoolCode)']} sessions with NO schoolCode\n`;
+        report += `   → Try "Update ALL Sessions" button\n`;
+      }
+    }
+
+    output.textContent = report;
+  } catch(e) {
+    output.textContent = `ERROR: ${e.message}`;
+  }
+};
+
+window.bulkUpdateAllPlayersInDatabase = async () => {
+  const schoolCode = 'BOERNELACROSSE2026';
+  if (!confirm(`Update ALL players in the database with schoolCode "${schoolCode}"?`)) return;
+  try {
+    setSync('busy', 'Updating all players...');
+    const childSnap = await getDocs(collection(db, 'children'));
+    let updated = 0;
+
+    for (const childDoc of childSnap.docs) {
+      const child = childDoc.data();
+      await setDoc(doc(db, 'children', childDoc.id), { 
+        ...child, 
+        schoolCode: schoolCode 
+      });
+      updated++;
+    }
+    setSync('ok', 'Live · Field Ready');
+    toast(`Updated ${updated} player(s) with schoolCode "${schoolCode}"`);
+  } catch(e) {
+    setSync('bad', 'Error');
+    toast('Error updating players: ' + e.message, true);
+  }
+};
+
+window.bulkUpdateAllSessionsInDatabase = async () => {
+  const schoolCode = 'BOERNELACROSSE2026';
+  if (!confirm(`Update ALL sessions in the database with schoolCode "${schoolCode}"?`)) return;
+  try {
+    setSync('busy', 'Updating all sessions...');
+    const sessSnap = await getDocs(collection(db, 'sessions'));
+    let updated = 0;
+
+    for (const sessDoc of sessSnap.docs) {
+      const sess = sessDoc.data();
+      await setDoc(doc(db, 'sessions', sessDoc.id), { 
+        ...sess, 
+        schoolCode: schoolCode 
+      });
+      updated++;
+    }
+    setSync('ok', 'Live · Field Ready');
+    toast(`Updated ${updated} session(s) with schoolCode "${schoolCode}"`);
+  } catch(e) {
+    setSync('bad', 'Error');
+    toast('Error updating sessions: ' + e.message, true);
+  }
+};
+
+// ── Actions ───────────────────────────────────────────────
+window._sel = id => { selId=id; renderChips(); renderSessions(); renderStats(); renderSportSelectorForChild(id); };
+
+window.addChild = async () => {
+  if (!currentUser) return;
+  const name     = document.getElementById('add-name').value.trim();
+  const position = document.getElementById('add-position').value;
+  const grade    = document.getElementById('add-grade').value;
+  if (!name)     { toast('Enter a player name!',true); return; }
+  if (!position) { toast('Select a position!',true); return; }
+  if (!grade)    { toast('Select a grade!',true); return; }
+  if (myChildren.find(c=>c.name.toLowerCase()===name.toLowerCase())) { toast('Player already on your roster!',true); return; }
+  await addDoc(collection(db,'children'),{
+    name, position, grade,
+    uid: currentUser.uid,
+    schoolCode: currentSchoolCode,
+    sport: currentSport,
+    sports: [currentSport],
+    ownerName: currentUser.displayName || currentUser.email,
+    colorIdx: allChildren.length % 6,
+    createdAt: new Date().toISOString()
+  });
+  document.getElementById('add-name').value='';
+  document.getElementById('add-position').value='';
+  document.getElementById('add-grade').value='';
+  toast(`${name} added to your roster!`);
+};
+
+window.logSession = async () => {
+  if (!currentUser||!selId){toast('Select a player first!',true);return;}
+  const mins  = parseInt(document.getElementById('log-mins').value);
+  const date  = document.getElementById('log-date').value||new Date().toISOString().slice(0,10);
+  const activeSport = logSport || currentSport;
+  const sportDrills = SPORTS_CONFIG[activeSport]?.drills || DRILLS;
+  const drills = sportDrills.filter(d=>document.getElementById(d.id)?.checked).map(d=>d.key);
+  if (!mins||mins<1){toast('Enter valid minutes!',true);return;}
+  await addDoc(collection(db,'sessions'),{
+    childId: selId,
+    uid: currentUser.uid,
+    schoolCode: currentSchoolCode,
+    sport: activeSport,
+    minutes: mins, date, drills,
+    loggedAt: new Date().toISOString()
+  });
+  document.getElementById('log-mins').value='';
+  (SPORTS_CONFIG[logSport||currentSport]?.drills||DRILLS).forEach(d=>{ const el=document.getElementById(d.id); if(el)el.checked=false; });
+  const child=myChildren.find(c=>c.id===selId);
+  toast(`${mins} mins logged for ${child?.name}!`);
+};
+
+window.delSession = async id => {
+  await deleteDoc(doc(db,'sessions',id));
+  toast('Session removed');
+};
+
+async function doRemoveChild(id) {
+  const child=myChildren.find(c=>c.id===id);
+  if (!confirm(`Remove ${child?.name} and ALL their sessions?`)) return;
+  await Promise.all(mySessions.filter(s=>s.childId===id).map(s=>deleteDoc(doc(db,'sessions',s.id))));
+  await deleteDoc(doc(db,'children',id));
+  if (selId===id) selId=null;
+  toast(`${child?.name} removed`);
+}
+
+async function doResetAll() {
+  if (!confirm('Delete all players and sessions for your school? This cannot be undone.')) return;
+  await Promise.all(allSessions.map(s=>deleteDoc(doc(db,'sessions',s.id))));
+  await Promise.all(allChildren.map(c=>deleteDoc(doc(db,'children',c.id))));
+  selId=null; toast('All school data cleared');
+}
+
+// ── Tabs ──────────────────────────────────────────────────
+window.goTab = (name, btn) => {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');
+  btn.classList.add('on');
+  if (name==='board')  { renderLbSportSelect(); renderLbDrillTabs(activeLbSport||currentSport); renderAllLeaderboards(); }
+  if (name==='manage') renderManage();
+};
+
+window.goLbTab = (name, btn) => {
+  document.querySelectorAll('.lb-panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.lb-tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('lbp-'+name).classList.add('on');
+  btn.classList.add('on');
+};
+
+// ── Helpers ───────────────────────────────────────────────
+function fmtDate(d){return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function setSync(s,l){document.getElementById('sync-dot').className='dot '+s;document.getElementById('sync-lbl').textContent=l;}
+let toastT;
+window.toast=(msg,bad=false)=>{
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=bad?'bad show':'show';
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),3200);
+};
+
+document.getElementById('log-date').valueAsDate = new Date();
+</script>
+</body>
+</html>
 
