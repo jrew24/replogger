@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lax Practice Tracker 🥍</title>
+<title>RepLogger</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;0,900;1,800&family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -37,8 +37,16 @@
   .hero::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(90deg,rgba(255,255,255,0.04) 0px,rgba(255,255,255,0.04) 1px,transparent 1px,transparent 80px); }
   .hero::after { content:''; position:absolute; bottom:-2px; left:0; right:0; height:32px; background:var(--chalk); clip-path:ellipse(55% 100% at 50% 100%); }
   .hero-inner { position:relative; z-index:1; }
-  .lax-icon { font-size:4.5rem; display:block; animation:spinBounce 3s ease-in-out infinite; filter:drop-shadow(0 4px 12px rgba(0,0,0,0.3)); }
-  @keyframes spinBounce { 0%{transform:translateY(0) rotate(-8deg)} 25%{transform:translateY(-12px) rotate(8deg)} 50%{transform:translateY(0) rotate(-4deg)} 75%{transform:translateY(-6px) rotate(4deg)} 100%{transform:translateY(0) rotate(-8deg)} }
+  /* Sport icons row */
+  .sport-icons { display:flex; justify-content:center; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:4px; }
+  .sport-icon-btn { font-size:2.4rem; display:inline-flex; align-items:center; justify-content:center;
+    width:56px; height:56px; border-radius:14px; background:rgba(255,255,255,0.10);
+    border:2px solid rgba(255,255,255,0.18); transition:all .25s; cursor:default;
+    filter:drop-shadow(0 3px 8px rgba(0,0,0,0.25)); }
+  .sport-icon-btn.active { background:rgba(255,255,255,0.25); border-color:rgba(255,255,255,0.7);
+    transform:translateY(-4px) scale(1.12); filter:drop-shadow(0 6px 16px rgba(0,0,0,0.35)); }
+  @keyframes floatIcon { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .sport-icon-btn.active { animation:floatIcon 2.8s ease-in-out infinite; }
   .hero h1 { font-family:'Barlow Condensed',sans-serif; font-size:clamp(2.4rem,7vw,4.5rem); font-weight:900; color:#fff; text-transform:uppercase; letter-spacing:2px; line-height:1; margin-top:10px; text-shadow:0 3px 16px rgba(0,0,0,0.3); }
   .hero h1 em { font-style:italic; color:var(--gold); display:block; font-size:0.85em; letter-spacing:4px; }
   .hero p { color:rgba(255,255,255,0.75); font-size:.95rem; font-weight:600; margin-top:8px; letter-spacing:.5px; }
@@ -290,8 +298,16 @@
 <!-- Hero -->
 <div class="hero">
   <div class="hero-inner">
-    <span class="lax-icon" id="hero-sport-icon">🥍</span>
-    <h1 id="hero-sport-title">Lax<em>Practice Tracker</em></h1>
+    <div class="sport-icons" id="hero-sport-icons">
+      <span class="sport-icon-btn active" data-sport="lacrosse">🥍</span>
+      <span class="sport-icon-btn" data-sport="soccer">⚽</span>
+      <span class="sport-icon-btn" data-sport="baseball">⚾</span>
+      <span class="sport-icon-btn" data-sport="basketball">🏀</span>
+      <span class="sport-icon-btn" data-sport="football">🏈</span>
+      <span class="sport-icon-btn" data-sport="swimming">🏊</span>
+      <span class="sport-icon-btn" data-sport="golf">⛳</span>
+    </div>
+    <h1><span style="color:var(--gold)">Rep</span>Logger</h1>
     <p id="hero-sport-sub">Log your reps · Own the field · Top the board</p>
     <div class="field-lines"><div class="field-line"></div><div class="field-line"></div><div class="field-line"></div></div>
     <div class="hero-auth" id="hero-auth" style="display:none">
@@ -443,6 +459,41 @@
 
     <!-- MANAGE TAB -->
     <div class="panel" id="tab-manage">
+      <!-- Add a Sport card -->
+      <div class="card" style="animation-delay:.05s">
+        <div class="card-title"><span>➕</span> Add a Sport for Your Child</div>
+        <p style="font-size:.82rem;color:var(--text-lt);font-weight:700;margin-bottom:14px">
+          Enter a sport-specific school code to enroll your child in another sport at the same school.
+          The code must be from the same school you registered with.
+        </p>
+        <div class="fields f2" style="margin-bottom:12px">
+          <div class="f">
+            <label>Player</label>
+            <select id="add-sport-child-select" class="grade-select" style="border-radius:10px;padding:10px 36px 10px 14px;width:100%">
+              <option value="" disabled selected>Select player…</option>
+            </select>
+          </div>
+          <div class="f">
+            <label>Sport School Code</label>
+            <input type="text" id="add-sport-code" placeholder="e.g. BOERNE-SOCCER"
+              style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;font-family:'Barlow',sans-serif;font-size:.95rem;font-weight:600;color:var(--text);background:var(--chalk);outline:none;text-transform:uppercase"
+              oninput="onAddSportCodeChange()" onkeydown="if(event.key==='Enter')addSportToChild()">
+          </div>
+        </div>
+        <div class="fields f2" style="margin-bottom:12px" id="add-sport-position-wrap" style="display:none">
+          <div class="f">
+            <label>Position for this Sport</label>
+            <select id="add-sport-position">
+              <option value="" disabled selected>Enter code above first…</option>
+            </select>
+          </div>
+        </div>
+        <div id="add-sport-err" style="font-size:.82rem;color:var(--red);font-weight:700;min-height:18px;margin-bottom:10px"></div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-green" onclick="addSportToChild()">Add Sport ＋</button>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-title"><span>⚙️</span> My Players</div>
         <p style="font-size:.82rem;color:var(--text-lt);font-weight:700;margin-bottom:2px">You can remove your own players.</p>
@@ -580,6 +631,18 @@ const SPORTS_CONFIG = {
       { key:'Endurance',     id:'d-endurance',     emoji:'💪', accent:'#0f4d24', cls:'endurance'     },
     ]
   },
+  golf: {
+    label: 'Golf', emoji: '⛳', accent:'#166534',
+    positions: ['Individual'],
+    drills: [
+      { key:'Driving',       id:'d-driving',       emoji:'🏌️', accent:'#166534', cls:'driving'       },
+      { key:'Iron Play',     id:'d-ironplay',      emoji:'⛳', accent:'#2196c4', cls:'ironplay'      },
+      { key:'Chipping',      id:'d-chipping',      emoji:'🎯', accent:'#d63030', cls:'chipping'      },
+      { key:'Putting',       id:'d-putting',       emoji:'🕳️', accent:'#7c3aed', cls:'putting'       },
+      { key:'Bunker Play',   id:'d-bunkerplay',    emoji:'🏖️', accent:'#b45309', cls:'bunkerplay'    },
+      { key:'Course Management', id:'d-coursemgmt',emoji:'🗺️', accent:'#0f4d24', cls:'coursemgmt'    },
+    ]
+  },
 };
 
 // Sport keyword → sport key mapping (for school code parsing)
@@ -590,6 +653,7 @@ const SPORT_KEYWORDS = {
   basketball:['BASKETBALL','BBALL','HOOPS'],
   football: ['FOOTBALL','FB'],
   swimming: ['SWIM','SWIMMING'],
+  golf:     ['GOLF'],
 };
 
 function detectSportFromCode(schoolCode) {
@@ -687,7 +751,7 @@ function applySchoolTheme(schoolCode) {
     ['--grass','--grass-lt','--grass-dk','--field','--chalk','--gold','--gold-dk',
      '--border','--text','--text-md','--text-lt','--shadow','--shadow-lg'].forEach(v => root.style.removeProperty(v));
     document.querySelector('.field-bg').style.background = '';
-    document.title = 'Lax Practice Tracker 🥍';
+    document.title = 'RepLogger';
     return;
   }
   root.setAttribute('data-school', schoolCode);
@@ -707,7 +771,7 @@ function applySchoolTheme(schoolCode) {
   // Update the field-stripe background to match school color
   document.querySelector('.field-bg').style.background =
     `repeating-linear-gradient(180deg,${theme.bgStripe1} 0px,${theme.bgStripe1} 60px,${theme.bgStripe2} 60px,${theme.bgStripe2} 120px)`;
-  document.title = `${theme.name} · Lax Practice Tracker 🥍`;
+  document.title = `RepLogger · ${theme.name}`;
 }
 
 let currentUser  = null;
@@ -762,9 +826,29 @@ function dismissTimeoutWarning() {
   if (el) el.classList.add('hidden');
 }
 
-// Reset timer on any meaningful user interaction
-['click','keydown','mousemove','touchstart','scroll'].forEach(evt =>
-  document.addEventListener(evt, () => { if (currentUser) resetSessionTimer(); }, { passive: true })
+// Reset timer on meaningful user interaction — throttled to fire at most
+// once every 30 s so mousemove/scroll can't flood setTimeout/clearTimeout.
+let _lastReset = 0;
+function _throttledReset() {
+  if (!currentUser) return;
+  const now = Date.now();
+  if (now - _lastReset < 30_000) return; // ignore if reset < 30 s ago
+  _lastReset = now;
+  resetSessionTimer();
+}
+['click','keydown','touchstart'].forEach(evt =>
+  document.addEventListener(evt, _throttledReset, { passive: true })
+);
+// mousemove and scroll get an extra throttle — only fire when the user
+// has been idle enough that the warning banner is already showing.
+['mousemove','scroll'].forEach(evt =>
+  document.addEventListener(evt, () => {
+    if (!currentUser) return;
+    const el = document.getElementById('session-warning');
+    const warningVisible = el && !el.classList.contains('hidden');
+    if (warningVisible) resetSessionTimer(); // always reset if warning is up
+    else _throttledReset();                  // otherwise throttle
+  }, { passive: true })
 );
 
 // ── Auth state ────────────────────────────────────────────
@@ -1019,15 +1103,22 @@ async function runAction(action,id) {
 // ── Sport UI helpers ──────────────────────────────────────
 function updateHeroSport() {
   const sp = SPORTS_CONFIG[currentSport] || SPORTS_CONFIG.lacrosse;
-  document.getElementById('hero-sport-icon').textContent = sp.emoji;
-  document.getElementById('hero-sport-title').innerHTML =
-    `${sp.label}<em>Practice Tracker</em>`;
-  document.getElementById('hero-sport-sub').textContent =
-    'Log your reps · Own the field · Top the board';
+
+  // Highlight the active sport icon, leave all others neutral
+  document.querySelectorAll('.sport-icon-btn').forEach(btn => {
+    const isCurrent = btn.dataset.sport === currentSport;
+    btn.classList.toggle('active', isCurrent);
+  });
+
+  // Update add-player icon and no-kids icon
   const addIcon = document.getElementById('add-player-sport-icon');
   if (addIcon) addIcon.textContent = sp.emoji;
   const noKidsIcon = document.getElementById('no-kids-icon');
   if (noKidsIcon) noKidsIcon.textContent = sp.emoji;
+
+  // Update page title
+  document.title = `RepLogger${sp ? ' · ' + sp.label : ''}`;
+
   renderPositionOptions(currentSport);
   renderDrillGrid(currentSport);
   renderLbSportSelect();
@@ -1058,17 +1149,15 @@ let activeLbSport = 'lacrosse';
 function renderLbSportSelect() {
   const sel = document.getElementById('lb-sport-select');
   if (!sel) return;
-  // Build list of sports present in school data
-  const sportsInSchool = [...new Set(allChildren.map(c => c.sport || detectSportFromCode(currentSchoolCode)))];
-  const allSports = Object.keys(SPORTS_CONFIG).filter(s =>
-    s === currentSport || sportsInSchool.includes(s)
-  );
-  // Always include at least the current sport
-  if (!allSports.includes(currentSport)) allSports.unshift(currentSport);
+  // Always show every sport — parent may have registered children under
+  // different codes and the dropdown must not be limited to what's in allChildren
+  const allSports = Object.keys(SPORTS_CONFIG);
   sel.innerHTML = allSports.map(s =>
     `<option value="${s}" ${s===activeLbSport?'selected':''}>${SPORTS_CONFIG[s].emoji} ${SPORTS_CONFIG[s].label}</option>`
   ).join('');
-  activeLbSport = sel.value;
+  // Keep activeLbSport in sync; default to currentSport on first render
+  if (!allSports.includes(activeLbSport)) activeLbSport = currentSport;
+  sel.value = activeLbSport;
 }
 
 function renderLbDrillTabs(sport) {
@@ -1198,7 +1287,7 @@ function buildLbHTML(ranked, accentColor, valueLabel) {
       <div class="lb-rank ${rankCls[i]||''}">${medals[i]||`#${i+1}`}</div>
       <div class="lax-av la${c.colorIdx}">${c.name.slice(0,2).toUpperCase()}</div>
       <div class="lb-info">
-        <div class="lb-name">${c.name}${isMe?`<span class="my-label">Mine</span>`:''} <span class="pos-badge pos-${c.position||'Attack'}" style="margin-left:4px">${c.position||''}</span> ${c.grade?`<span class="grade-badge grade-${c.grade==='7/8'?'78':'56'}">${c.grade}</span>`:''}</div>
+        <div class="lb-name">${c.name}${isMe?`<span class="my-label">Mine</span>`:''} <span class="pos-badge" style="margin-left:4px;background:#e0e7ff;color:#1e3a8a">${(c.sportPositions&&c.sportPositions[activeLbSport||currentSport])||c.position||''}</span> ${c.grade?`<span class="grade-badge grade-${c.grade==='7/8'?'78':'56'}">${c.grade}</span>`:''}</div>
         <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(c.value/max*100)}%;background:${accentColor}"></div></div>
         <div style="font-size:.68rem;color:var(--text-lt);font-weight:700;margin-top:3px;text-transform:uppercase;letter-spacing:.06em">${c.sessions} session${c.sessions!==1?'s':''}</div>
       </div>
@@ -1235,14 +1324,17 @@ function renderAllLeaderboards() {
     ? allChildren
     : allChildren.filter(c => c.grade === activeLbGrade);
 
-  const filtered = gradeFiltered.filter(c =>
-    !c.sport || c.sport === sport ||
-    (c.sports && c.sports.includes(sport))
-  );
+  // A child with no sport field is treated as lacrosse (legacy data).
+  // Never let a missing field match every sport — only match explicitly.
+  const filtered = gradeFiltered.filter(c => {
+    const childSport  = c.sport  || 'lacrosse';
+    const childSports = c.sports && c.sports.length ? c.sports : [childSport];
+    return childSports.includes(sport);
+  });
 
-  // Filter sessions by sport too
+  // Sessions with no sport field are treated as lacrosse (legacy data).
   const sportSessions = allSessions.filter(s =>
-    !s.sport || s.sport === sport
+    (s.sport || 'lacrosse') === sport
   );
 
   const gl = gradeLabel();
@@ -1275,8 +1367,17 @@ function renderAllLeaderboards() {
 
 function renderManage() {
   const list=document.getElementById('mgr-list');
-  
-  // Display current school code
+
+  // Populate the "Add a Sport" child selector
+  const childSel = document.getElementById('add-sport-child-select');
+  if (childSel) {
+    childSel.innerHTML = myChildren.length
+      ? `<option value="" disabled selected>Select player…</option>` +
+        myChildren.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')
+      : `<option value="" disabled selected>No players yet</option>`;
+  }
+
+  // Display current school
   const schoolDisplay = document.getElementById('current-school-display');
   if (currentSchoolCode) {
     const schoolData = allSchoolCodes.find(s => s.id === currentSchoolCode);
@@ -1285,21 +1386,37 @@ function renderManage() {
     schoolDisplay.textContent = 'Not set';
     schoolDisplay.style.color = 'var(--red)';
   }
-  
+
   if (!myChildren.length){list.innerHTML=`<div class="empty"><span class="ei">👤</span>No players yet.</div>`;return;}
   list.innerHTML=myChildren.map(c=>{
     const total=mySessions.filter(s=>s.childId===c.id).reduce((a,s)=>a+s.minutes,0);
     const count=mySessions.filter(s=>s.childId===c.id).length;
-    return `<div class="mgr-row">
-      <div class="mgr-info">
+    const sports = c.sports && c.sports.length ? c.sports : [c.sport||currentSport];
+    const positions = c.sportPositions || { [c.sport||currentSport]: c.position };
+    const sportPills = sports.map(s => {
+      const sp  = SPORTS_CONFIG[s];
+      const pos = positions[s] || c.position || '';
+      return sp
+        ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 6px;border-radius:50px;background:var(--field);border:1.5px solid var(--border);font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--grass-dk)">
+            ${sp.emoji} ${sp.label}${pos ? ' · ' + pos : ''}
+            ${sports.length > 1
+              ? `<button onclick="window.removeSportFromChild('${c.id}','${s}')"
+                  style="background:none;border:none;cursor:pointer;font-size:.8rem;color:var(--text-lt);padding:0 0 0 2px;line-height:1" title="Remove ${sp.label}">✕</button>`
+              : ''}
+           </span>`
+        : '';
+    }).join('');
+    return `<div class="mgr-row" style="flex-wrap:wrap;gap:10px">
+      <div class="mgr-info" style="flex:1;min-width:0">
         <div class="lax-av la${c.colorIdx}" style="width:38px;height:38px;font-size:.9rem;border-radius:8px">${c.name.slice(0,2).toUpperCase()}</div>
-        <div>
+        <div style="min-width:0">
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
             <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:.95rem;text-transform:uppercase;letter-spacing:.04em">${c.name}</span>
             <span class="pos-badge pos-${c.position||'Attack'}">${c.position||''}</span>
             ${c.grade?`<span class="grade-badge grade-${({'HS':'HS','7/8':'78','5/6':'56','3/4':'34','1/2':'12'}[c.grade]||'78')}">${c.grade}</span>`:''}
           </div>
-          <div class="mgr-sub">${SPORTS_CONFIG[c.sport||currentSport]?.emoji||'🥍'} ${SPORTS_CONFIG[c.sport||currentSport]?.label||'Lacrosse'} · ${total} mins · ${count} session${count!==1?'s':''}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:5px">${sportPills}</div>
+          <div class="mgr-sub" style="margin-top:4px">${total} mins · ${count} session${count!==1?'s':''}</div>
         </div>
       </div>
       <button class="btn-sm" onclick="window.guardedAction('removeChild','${c.id}')">✕ Remove</button>
@@ -1328,6 +1445,115 @@ async function renderSchoolCodesDisplay() {
   } catch(e) {
     console.error('Error loading school codes:', e);
   }
+}
+
+// ── Add / remove sport on a child ────────────────────────
+window.addSportToChild = async () => {
+  const childId = document.getElementById('add-sport-child-select').value;
+  const code    = document.getElementById('add-sport-code').value.trim().toUpperCase();
+  const errEl   = document.getElementById('add-sport-err');
+  errEl.textContent = '';
+
+  if (!childId) { errEl.textContent = 'Please select a player.'; return; }
+  if (!code)    { errEl.textContent = 'Please enter a school code.'; return; }
+
+  // Validate the code exists in Firestore
+  let codeDoc;
+  try {
+    codeDoc = await getDoc(doc(db, 'schoolCodes', code));
+  } catch(e) {
+    errEl.textContent = 'Error checking code. Please try again.'; return;
+  }
+  if (!codeDoc.exists()) {
+    errEl.textContent = 'Invalid school code. Ask your coach for the correct code.'; return;
+  }
+
+  // Enforce same-school rule: the base school name must match
+  const newSchoolBase  = extractSchoolBase(code);
+  const currSchoolBase = extractSchoolBase(currentSchoolCode);
+  if (newSchoolBase !== currSchoolBase) {
+    errEl.textContent = `That code belongs to a different school. You can only add sports from ${currSchoolBase || 'your school'}.`;
+    return;
+  }
+
+  // Detect sport from the new code
+  const newSport = detectSportFromCode(code);
+  const child    = myChildren.find(c => c.id === childId);
+  if (!child) { errEl.textContent = 'Player not found.'; return; }
+
+  const existingSports = child.sports && child.sports.length ? child.sports : [child.sport || currentSport];
+  if (existingSports.includes(newSport)) {
+    errEl.textContent = `${child.name} is already enrolled in ${SPORTS_CONFIG[newSport]?.label || newSport}.`;
+    return;
+  }
+
+  // Require a position for the new sport
+  const newPosition = document.getElementById('add-sport-position').value;
+  if (!newPosition) { errEl.textContent = 'Please select a position for this sport.'; return; }
+
+  const updatedSports = [...existingSports, newSport];
+  const existingPositions = child.sportPositions || { [child.sport || currentSport]: child.position };
+  const updatedPositions = { ...existingPositions, [newSport]: newPosition };
+
+  try {
+    await setDoc(doc(db, 'children', childId), {
+      ...child,
+      sports: updatedSports,
+      sportPositions: updatedPositions,
+    });
+    document.getElementById('add-sport-code').value = '';
+    document.getElementById('add-sport-position').innerHTML = '<option value="" disabled selected>Enter code above first…</option>';
+    toast(`${SPORTS_CONFIG[newSport]?.emoji || ''} ${SPORTS_CONFIG[newSport]?.label || newSport} added for ${child.name}!`);
+  } catch(e) {
+    errEl.textContent = 'Error saving. Please try again.';
+  }
+};
+
+window.removeSportFromChild = async (childId, sport) => {
+  const child = myChildren.find(c => c.id === childId);
+  if (!child) return;
+  const existingSports = child.sports && child.sports.length ? child.sports : [child.sport || currentSport];
+  if (existingSports.length <= 1) {
+    toast('A player must have at least one sport.', true); return;
+  }
+  const sp = SPORTS_CONFIG[sport];
+  if (!confirm(`Remove ${sp?.label || sport} from ${child.name}?`)) return;
+  const updatedSports = existingSports.filter(s => s !== sport);
+  await setDoc(doc(db, 'children', childId), { ...child, sports: updatedSports });
+  toast(`${sp?.label || sport} removed from ${child.name}.`);
+};
+
+// Populate position dropdown when a sport code is typed
+window.onAddSportCodeChange = function() {
+  const code = document.getElementById('add-sport-code').value.trim().toUpperCase();
+  const sel  = document.getElementById('add-sport-position');
+  const wrap = document.getElementById('add-sport-position-wrap');
+  const sport = detectSportFromCode(code);
+  const positions = SPORTS_CONFIG[sport]?.positions || [];
+  if (code.length >= 3 && positions.length) {
+    sel.innerHTML = `<option value="" disabled selected>Select position…</option>` +
+      positions.map(p => `<option value="${p}">${p}</option>`).join('');
+    wrap.style.display = 'block';
+  } else {
+    sel.innerHTML = '<option value="" disabled selected>Enter code above first…</option>';
+    wrap.style.display = 'none';
+  }
+};
+
+// Extract the school-name portion of a code (everything before the sport keyword)
+function extractSchoolBase(code) {
+  if (!code) return '';
+  const upper = code.toUpperCase();
+  // Strip any known sport keyword suffix
+  const allKeywords = Object.values(SPORT_KEYWORDS).flat();
+  for (const kw of allKeywords.sort((a,b) => b.length - a.length)) {
+    const idx = upper.lastIndexOf(kw);
+    if (idx !== -1) {
+      // Remove the keyword and any separator before it
+      return upper.slice(0, idx).replace(/[-_\s]+$/, '');
+    }
+  }
+  return upper; // no sport keyword found — treat whole code as school base
 }
 
 window.createSchoolCode = async () => {
@@ -1556,6 +1782,7 @@ window.addChild = async () => {
     schoolCode: currentSchoolCode,
     sport: currentSport,
     sports: [currentSport],
+    sportPositions: { [currentSport]: position }, // positions keyed by sport
     ownerName: currentUser.displayName || currentUser.email,
     colorIdx: allChildren.length % 6,
     createdAt: new Date().toISOString()
@@ -1640,4 +1867,3 @@ document.getElementById('log-date').valueAsDate = new Date();
 </script>
 </body>
 </html>
-
