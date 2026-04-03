@@ -852,8 +852,11 @@ function _throttledReset() {
 );
 
 // ── Auth state ────────────────────────────────────────────
+// Show auth screen immediately — don't block on Firebase resolving
+document.getElementById('init-loading').style.display = 'none';
+document.getElementById('auth-screen').style.display  = 'flex';
+
 onAuthStateChanged(auth, async user => {
-  document.getElementById('init-loading').style.display = 'none';
   if (user) {
     currentUser = user;
     // Load user's school code — retry briefly in case the Firestore write
